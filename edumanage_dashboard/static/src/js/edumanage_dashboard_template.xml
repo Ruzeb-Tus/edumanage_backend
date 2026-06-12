@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="edumanage_dashboard.Main" owl="1">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Bricolage+Grotesque:wght@400;500;600;700;800&amp;display=swap"/>
+
+  <div class="emd-shell">
+
+    <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+    <aside t-attf-class="emd-sidebar {{ state.sidebarCollapsed ? 'collapsed' : '' }}">
+
+      <div class="emd-sidebar-logo" t-on-click="toggleSidebar">
+        <div class="emd-sidebar-logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3L2 8l10 5 10-5-10-5zM2 14l10 5 10-5M2 19l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="emd-wordmark">Edu<span>Manage</span></span>
+      </div>
+
+      <nav class="emd-nav">
+        <t t-foreach="navItems" t-as="item" t-key="item.id">
+          <div t-attf-class="emd-nav-item {{ state.activeNav === item.id ? 'active' : '' }}"
+               t-on-click="() => setNav(item.id)">
+            <svg viewBox="0 0 24 24" t-att-data-icon="item.id">
+              <t t-out="item.iconPath"/>
+            </svg>
+            <span class="emd-nav-label"><t t-out="item.label"/></span>
+          </div>
+        </t>
+      </nav>
+
+      <div class="emd-sidebar-footer">
+        <div class="emd-collapse-btn" t-on-click="toggleSidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          <span>Collapse</span>
+        </div>
+        <div class="emd-user-card">
+          <div class="emd-user-avatar"><t t-out="state.userInitials"/></div>
+          <div class="emd-user-info">
+            <div class="emd-user-name"><t t-out="state.userName"/></div>
+            <div class="emd-user-role">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══ MAIN ═════════════════════════════════════════════ -->
+    <div class="emd-main">
+
+      <header class="emd-header">
+        <span class="emd-header-title"><t t-out="activeTitle"/></span>
+        <div class="emd-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search students, fees, classes…"/>
+        </div>
+        <div class="emd-header-actions">
+          <div class="emd-icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="emd-notif-dot"/>
+          </div>
+          <div class="emd-header-avatar"><t t-out="state.userInitials"/></div>
+        </div>
+      </header>
+
+      <div class="emd-content">
+        <div class="emd-inner">
+
+          <!-- ══ DASHBOARD TAB ════════════════════════════════ -->
+          <t t-if="state.activeNav === 'dashboard'">
+            <!-- Greeting Hero -->
+            <div class="emd-greeting">
+              <div class="emd-greeting-left">
+                <h1 class="emd-greeting-name"><t t-out="state.greetText"/>, <t t-out="state.userName"/></h1>
+                <p class="emd-greeting-inst"><t t-out="state.institutionName"/></p>
+                <p class="emd-greeting-date"><t t-out="state.dateCaps"/></p>
+                <p class="emd-greeting-quote"><t t-out="state.dailyQuote"/></p>
+              </div>
+              <div class="emd-greeting-right">
+                <div class="emd-greeting-deco"/>
+              </div>
+            </div>
+
+            <!-- Alert Strip -->
+            <t t-if="state.showAlert">
+              <div class="emd-alert-strip">
+                <div class="emd-alert-strip-items">
+                  <div class="emd-alert-item">3 student birthdays today — Arjun, Priya, Meenal</div>
+                  <div class="emd-alert-item">Fee deadline in 2 days — 47 students pending</div>
+                  <div class="emd-alert-item">2 admission forms awaiting review</div>
+                </div>
+                <button class="emd-alert-dismiss" t-on-click="dismissAlert">✕</button>
+              </div>
+            </t>
+
+            <!-- Metric Cards -->
+            <div class="emd-metrics">
+              <t t-foreach="metrics" t-as="m" t-key="m.id">
+                <div t-attf-class="emd-metric-card accent-{{ m.accent }} {{ m.critical ? 'critical' : '' }}">
+                  <div class="emd-metric-top">
+                    <div class="emd-metric-icon-wrap">
+                      <svg viewBox="0 0 24 24"><t t-out="m.iconPath"/></svg>
+                    </div>
+                  </div>
+                  <div class="emd-metric-value-row">
+                    <t t-if="m.prefix">
+                      <span class="emd-metric-prefix"><t t-out="m.prefix"/></span>
+                    </t>
+                    <span class="emd-metric-value"><t t-out="m.value"/></span>
+                  </div>
+                  <div class="emd-metric-label"><t t-out="m.label"/></div>
+                  <t t-if="m.trend">
+                    <div class="emd-metric-divider"/>
+                    <div t-attf-class="emd-metric-note {{ m.trendWarn ? 'warn' : '' }}">
+                      <t t-out="m.trend"/>
+                    </div>
+                  </t>
+                </div>
+              </t>
+            </div>
+
+            <!-- Quick Actions -->
+            <p class="emd-section-title">Quick Actions</p>
+            <div class="emd-quick-actions">
+              <button class="emd-action-btn" t-on-click="() => setNav('students')">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Student
+              </button>
+              <button class="emd-action-btn" t-on-click="() => setNav('attendance')">
+                <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Mark Attendance
+              </button>
+              <button class="emd-action-btn" t-on-click="() => setNav('fees')">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Collect Fees
+              </button>
+              <button class="emd-action-btn" t-on-click="() => setNav('reports')">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                View Reports
+              </button>
+              <button class="emd-action-btn" t-on-click="() => setNav('documents')">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Documents
+              </button>
+            </div>
+
+            <!-- Shortcuts -->
+            <p class="emd-section-title">Shortcuts</p>
+            <div class="emd-shortcuts">
+              <t t-foreach="shortcuts" t-as="sc" t-key="sc.id">
+                <div class="emd-shortcut" t-on-click="() => setNav(sc.id)">
+                  <div class="emd-shortcut-icon">
+                    <svg viewBox="0 0 24 24"><t t-out="sc.iconPath"/></svg>
+                  </div>
+                  <div class="emd-shortcut-name"><t t-out="sc.label"/></div>
+                  <div class="emd-shortcut-desc"><t t-out="sc.desc"/></div>
+                </div>
+              </t>
+            </div>
+
+            <!-- Focus + Activity -->
+            <div class="emd-three-col">
+              <div class="emd-panel">
+                <div class="emd-panel-header">
+                  <span class="emd-panel-title">Today's Focus</span>
+                </div>
+                <div class="emd-panel-body">
+                  <div class="emd-focus-item" t-on-click="() => setNav('fees')">
+                    <div class="emd-focus-dot warn"/>
+                    <div class="emd-focus-text">
+                      <div class="emd-focus-label">Fees Due Today</div>
+                      <div class="emd-focus-sub">₹48,500 across 12 students</div>
+                    </div>
+                    <span class="emd-focus-badge warn">12</span>
+                    <span class="emd-view-link">View →</span>
+                  </div>
+                  <div class="emd-focus-item" t-on-click="() => setNav('fees')">
+                    <div class="emd-focus-dot warn"/>
+                    <div class="emd-focus-text">
+                      <div class="emd-focus-label">Overdue Fees</div>
+                      <div class="emd-focus-sub">Students with dues &gt; 30 days</div>
+                    </div>
+                    <span class="emd-focus-badge warn">8</span>
+                    <span class="emd-view-link">View →</span>
+                  </div>
+                  <div class="emd-focus-item" t-on-click="() => setNav('attendance')">
+                    <div class="emd-focus-dot"/>
+                    <div class="emd-focus-text">
+                      <div class="emd-focus-label">Attendance Unmarked</div>
+                      <div class="emd-focus-sub">3 classes not yet marked</div>
+                    </div>
+                    <span class="emd-focus-badge">3</span>
+                    <span class="emd-view-link">Mark →</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="emd-panel">
+                <div class="emd-panel-header">
+                  <span class="emd-panel-title">
+                    <span class="emd-live-dot"/>
+                    Live Activity
+                  </span>
+                </div>
+                <div class="emd-panel-body">
+                  <ul class="emd-feed">
+                    <t t-foreach="activityFeed" t-as="act" t-key="act.id">
+                      <li class="emd-feed-item">
+                        <div t-attf-class="emd-feed-dot {{ act.color }}"/>
+                        <div class="emd-feed-body">
+                          <div class="emd-feed-title"><t t-out="act.title"/></div>
+                          <div class="emd-feed-meta"><t t-out="act.meta"/></div>
+                        </div>
+                      </li>
+                    </t>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ STUDENTS TAB ═════════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'students'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">Active Student Roster</span>
+                <button class="emd-action-btn" style="padding: 8px 14px; margin: 0;">+ New Admission</button>
+              </div>
+              <div class="emd-panel-body">
+                <div style="display: grid; gap: 12px; margin-top: 12px;">
+                  <!-- Student 1 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                      <div style="width: 40px; height: 40px; border-radius: 50%; background: #1a2d6b; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--emd-cyan);">AK</div>
+                      <div>
+                        <div style="font-size: 14px; font-weight: 600;">Arjun Kumar</div>
+                        <div style="font-size: 12px; color: var(--emd-text-3);">ID: EDU-2026-0042 · Class 10A</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Active</span>
+                  </div>
+                  <!-- Student 2 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                      <div style="width: 40px; height: 40px; border-radius: 50%; background: #1a2d6b; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--emd-cyan);">PM</div>
+                      <div>
+                        <div style="font-size: 14px; font-weight: 600;">Priya Mehta</div>
+                        <div style="font-size: 12px; color: var(--emd-text-3);">ID: EDU-2026-0105 · Class 9B</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Active</span>
+                  </div>
+                  <!-- Student 3 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                      <div style="width: 40px; height: 40px; border-radius: 50%; background: #1a2d6b; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--emd-cyan);">RV</div>
+                      <div>
+                        <div style="font-size: 14px; font-weight: 600;">Rahul Verma</div>
+                        <div style="font-size: 12px; color: var(--emd-text-3);">ID: EDU-2026-0089 · Class 10A</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ ATTENDANCE TAB ═══════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'attendance'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">Daily Class Attendance Tracker</span>
+              </div>
+              <div class="emd-panel-body">
+                <div style="display: grid; gap: 12px; margin-top: 12px;">
+                  <!-- Class 1 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Class 10A</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">32/32 Marked · Today 09:15 AM</div>
+                    </div>
+                    <button class="emd-action-btn" style="padding: 6px 12px; border-radius: 8px; border-color: rgba(0, 196, 140, 0.3); background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Completed</button>
+                  </div>
+                  <!-- Class 2 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Class 9B</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Pending · Due by 12:00 PM</div>
+                    </div>
+                    <button class="emd-action-btn" style="padding: 6px 12px; border-radius: 8px;">Mark Attendance</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ FEES TAB ═════════════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'fees'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">Pending &amp; Outstanding Collections</span>
+              </div>
+              <div class="emd-panel-body">
+                <div style="display: grid; gap: 12px; margin-top: 12px;">
+                  <!-- Fee 1 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Priya Mehta</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Term 2 Fees · Class 9B</div>
+                    </div>
+                    <div style="text-align: right;">
+                      <div style="font-size: 14px; font-weight: 600; color: var(--emd-amber);">₹8,500 Due</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Overdue 2 days</div>
+                    </div>
+                  </div>
+                  <!-- Fee 2 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Rahul Verma</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Activity Charges · Class 10A</div>
+                    </div>
+                    <div style="text-align: right;">
+                      <div style="font-size: 14px; font-weight: 600; color: var(--emd-amber);">₹5,200 Due</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Overdue 5 days</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ DOCUMENTS TAB ════════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'documents'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">Document Hub</span>
+              </div>
+              <div class="emd-panel-body">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px;">
+                  <!-- Folder 1 -->
+                  <div style="padding: 20px; border: 1px solid var(--emd-border); border-radius: 16px; background: rgba(255, 255, 255, 0.01); cursor: pointer;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
+                    <div style="font-size: 14px; font-weight: 600;">Student Records</div>
+                    <div style="font-size: 12px; color: var(--emd-text-3);">128 files</div>
+                  </div>
+                  <!-- Folder 2 -->
+                  <div style="padding: 20px; border: 1px solid var(--emd-border); border-radius: 16px; background: rgba(255, 255, 255, 0.01); cursor: pointer;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
+                    <div style="font-size: 14px; font-weight: 600;">Fee Invoices</div>
+                    <div style="font-size: 12px; color: var(--emd-text-3);">412 files</div>
+                  </div>
+                  <!-- Folder 3 -->
+                  <div style="padding: 20px; border: 1px solid var(--emd-border); border-radius: 16px; background: rgba(255, 255, 255, 0.01); cursor: pointer;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
+                    <div style="font-size: 14px; font-weight: 600;">Curriculum Plans</div>
+                    <div style="font-size: 12px; color: var(--emd-text-3);">34 files</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ REPORTS TAB ══════════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'reports'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">Academic &amp; Financial Reports</span>
+              </div>
+              <div class="emd-panel-body">
+                <div style="display: grid; gap: 12px; margin-top: 12px;">
+                  <!-- Report 1 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Monthly Collection Report</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Financial reconciliation report for May 2026</div>
+                    </div>
+                    <button class="emd-action-btn" style="padding: 6px 12px; border-radius: 8px;">Download PDF</button>
+                  </div>
+                  <!-- Report 2 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Attendance Summary</div>
+                      <div style="font-size: 12px; color: var(--emd-text-3);">Aggregated attendance stats for Term 1</div>
+                    </div>
+                    <button class="emd-action-btn" style="padding: 6px 12px; border-radius: 8px;">Download Excel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ TIMETABLE TAB ════════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'timetable'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">Weekly Timetable Grid</span>
+              </div>
+              <div class="emd-panel-body">
+                <div style="margin-top: 12px; border: 1px solid var(--emd-border); border-radius: 12px; overflow: hidden;">
+                  <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead>
+                      <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--emd-border);">
+                        <th style="padding: 12px;">Time</th>
+                        <th style="padding: 12px;">Monday</th>
+                        <th style="padding: 12px;">Tuesday</th>
+                        <th style="padding: 12px;">Wednesday</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style="border-bottom: 1px solid var(--emd-border);">
+                        <td style="padding: 12px; font-weight: 600;">09:00 - 10:00</td>
+                        <td style="padding: 12px;">Mathematics · Class 10A</td>
+                        <td style="padding: 12px;">Physics · Class 9B</td>
+                        <td style="padding: 12px;">English · Class 10A</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; font-weight: 600;">10:00 - 11:00</td>
+                        <td style="padding: 12px;">Science · Class 9B</td>
+                        <td style="padding: 12px;">Chemistry · Class 10A</td>
+                        <td style="padding: 12px;">History · Class 9B</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- ══ SETTINGS TAB ═════════════════════════════════ -->
+          <t t-else-if="state.activeNav === 'settings'">
+            <div class="emd-panel">
+              <div class="emd-panel-header">
+                <span class="emd-panel-title">System &amp; General Settings</span>
+              </div>
+              <div class="emd-panel-body">
+                <div style="display: grid; gap: 16px; margin-top: 12px; max-width: 500px;">
+                  <div>
+                    <label style="display: block; font-size: 12px; color: var(--emd-text-label); text-transform: uppercase; margin-bottom: 6px;">Institution Name</label>
+                    <input type="text" t-att-value="state.institutionName" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--emd-border); background: rgba(255,255,255,0.02); color: white; outline: none;"/>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 12px; color: var(--emd-text-label); text-transform: uppercase; margin-bottom: 6px;">Email Notifications</label>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                      <input type="checkbox" checked="checked" style="width: 16px; height: 16px;"/>
+                      <span>Send daily attendance digests to admin</span>
+                    </div>
+                  </div>
+                  <button class="emd-action-btn" style="margin-top: 12px; align-self: flex-start;">Save Changes</button>
+                </div>
+              </div>
+            </div>
+          </t>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</t>
+
+</templates>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Client Action — Dashboard -->
+    <record id="action_edumanage_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">edumanage_dashboard.main</field>
+    </record>
+
+    <!-- Add Dashboard to EduManage menu (before Setup) -->
+    <menuitem
+        id="menu_edumanage_dashboard"
+        name="Dashboard"
+        parent="edumanage_setup.menu_edumanage_root"
+        action="action_edumanage_dashboard"
+        sequence="1"
+    />
+
+</odoo>

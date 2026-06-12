@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ─── Top-Level App Menu ───────────────────────────────── -->
+    <menuitem
+        id="menu_edumanage_root"
+        name="EduManage"
+        sequence="1"
+        web_icon="edumanage_setup,static/description/icon.png"
+    />
+
+    <!-- ─── Setup Group ──────────────────────────────────────── -->
+    <menuitem
+        id="menu_edumanage_setup"
+        name="Setup"
+        parent="menu_edumanage_root"
+        sequence="10"
+    />
+
+    <!-- ─── Start Setup (beautiful onboarding flow) ──────────── -->
+    <menuitem
+        id="menu_edumanage_setup_start"
+        name="Institution Setup"
+        parent="menu_edumanage_setup"
+        action="action_edumanage_setup_client"
+        sequence="1"
+    />
+
+    <!-- ─── Manage Institutions ──────────────────────────────── -->
+    <menuitem
+        id="menu_edumanage_institutions"
+        name="My Institution"
+        parent="menu_edumanage_setup"
+        action="action_edumanage_institution"
+        sequence="2"
+    />
+
+</odoo>
