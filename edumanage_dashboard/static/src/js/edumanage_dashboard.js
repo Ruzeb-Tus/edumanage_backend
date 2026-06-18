@@ -18,6 +18,7 @@ const QUOTES = [
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", iconPath: `<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>` },
+  { id: "institution", label: "Institution", iconPath: `<path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/>` },
   { id: "students",  label: "Students",  iconPath: `<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
   { id: "attendance",label: "Attendance",iconPath: `<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>` },
   { id: "fees",      label: "Fees",      iconPath: `<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>` },
@@ -58,6 +59,37 @@ const ACTIVITY = [
   { id: 8, title: "Fee overdue notice sent — 8 students",      color: "amber", minutesAgo: 120 },
 ];
 
+const STUDENTS_DATA = [
+  { id: 1,  name: "Arjun Kumar",    studentId: "EDU-2026-0042", className: "Class 10A", rollNo: "12",  gender: "male",   guardian: "Raj Kumar",      feeStatus: "Paid",    attendancePct: 94, status: "active", statusLabel: "Active" },
+  { id: 2,  name: "Priya Mehta",    studentId: "EDU-2026-0105", className: "Class 9B",  rollNo: "08",  gender: "female", guardian: "Sanjay Mehta",    feeStatus: "Due",     attendancePct: 91, status: "active", statusLabel: "Active" },
+  { id: 3,  name: "Rahul Verma",    studentId: "EDU-2026-0089", className: "Class 10A", rollNo: "18",  gender: "male",   guardian: "Vikram Verma",    feeStatus: "Paid",    attendancePct: 88, status: "active", statusLabel: "Active" },
+  { id: 4,  name: "Sneha Rao",      studentId: "EDU-2026-0156", className: "Class 6A",  rollNo: "05",  gender: "female", guardian: "Anand Rao",       feeStatus: "Paid",    attendancePct: 97, status: "active", statusLabel: "Active" },
+  { id: 5,  name: "Aditya Singh",   studentId: "EDU-2026-0078", className: "Class 10A", rollNo: "22",  gender: "male",   guardian: "Mohit Singh",     feeStatus: "Overdue", attendancePct: 82, status: "active", statusLabel: "Active" },
+  { id: 6,  name: "Meenal Joshi",   studentId: "EDU-2026-0201", className: "Class 8A",  rollNo: "15",  gender: "female", guardian: "Deepak Joshi",    feeStatus: "Paid",    attendancePct: 96, status: "active", statusLabel: "Active" },
+  { id: 7,  name: "Karan Patel",    studentId: "EDU-2026-0134", className: "Class 9B",  rollNo: "27",  gender: "male",   guardian: "Nilesh Patel",    feeStatus: "Due",     attendancePct: 79, status: "inactive", statusLabel: "Inactive" },
+  { id: 8,  name: "Ananya Sharma",  studentId: "EDU-2026-0167", className: "Class 7B",  rollNo: "03",  gender: "female", guardian: "Vivek Sharma",    feeStatus: "Paid",    attendancePct: 93, status: "active", statusLabel: "Active" },
+  { id: 9,  name: "Rohan Gupta",    studentId: "EDU-2026-0223", className: "Class 8A",  rollNo: "09",  gender: "male",   guardian: "Suresh Gupta",    feeStatus: "Paid",    attendancePct: 90, status: "active", statusLabel: "Active" },
+  { id: 10, name: "Ishita Desai",   studentId: "EDU-2026-0188", className: "Class 6A",  rollNo: "11",  gender: "female", guardian: "Mahesh Desai",    feeStatus: "Overdue", attendancePct: 85, status: "active", statusLabel: "Active" },
+  { id: 11, name: "Varun Nair",     studentId: "EDU-2026-0245", className: "Class 7B",  rollNo: "20",  gender: "male",   guardian: "Ramesh Nair",     feeStatus: "Paid",    attendancePct: 92, status: "active", statusLabel: "Active" },
+  { id: 12, name: "Kavya Reddy",    studentId: "EDU-2026-0099", className: "Class 10A", rollNo: "14",  gender: "female", guardian: "Krishna Reddy",   feeStatus: "Paid",    attendancePct: 95, status: "active", statusLabel: "Active" },
+];
+
+const CLASSES_DATA = [
+  { id: 1, name: "Class 10A",  section: "Science",    teacher: "Mrs. Sharma",     students: 32, attendance: 94, subjects: 8 },
+  { id: 2, name: "Class 9B",   section: "Commerce",   teacher: "Mr. Patel",       students: 28, attendance: 91, subjects: 7 },
+  { id: 3, name: "Class 8A",   section: "General",    teacher: "Ms. Gupta",       students: 35, attendance: 88, subjects: 9 },
+  { id: 4, name: "Class 7B",   section: "General",    teacher: "Mr. Reddy",       students: 30, attendance: 93, subjects: 8 },
+  { id: 5, name: "Class 6A",   section: "Foundation", teacher: "Mrs. Desai",      students: 26, attendance: 96, subjects: 7 },
+  { id: 6, name: "Class 5C",   section: "Foundation", teacher: "Ms. Verma",       students: 24, attendance: 97, subjects: 6 },
+];
+
+const STUDENT_FILTERS = [
+  { id: "all",     label: "All Students", count: STUDENTS_DATA.length },
+  { id: "active",  label: "Active",       count: STUDENTS_DATA.filter(s => s.status === "active").length },
+  { id: "inactive",label: "Inactive",     count: STUDENTS_DATA.filter(s => s.status === "inactive").length },
+  { id: "feeDue",  label: "Fee Due",      count: STUDENTS_DATA.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue").length },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getGreeting() {
@@ -91,6 +123,7 @@ export class EduManageDashboard extends Component {
 
   setup() {
     this.orm = useService("orm");
+    this.action = useService("action");
     const greet = getGreeting();
     const date  = formatDate();
 
@@ -105,10 +138,15 @@ export class EduManageDashboard extends Component {
       userName: "Admin",
       userInitials: "A",
       institutionName: "EduManage Institution",
+      institutionId: null,
       dailyQuote: QUOTES[new Date().getDay() % QUOTES.length],
       dayName:  date.dayName,
       dateStr:  date.dateStr,
       dateCaps: date.dateCaps,
+      // Students tab state
+      studentsSubTab: "roster",
+      studentFilter: "all",
+      studentSearch: "",
     });
 
     this.navItems     = NAV_ITEMS;
@@ -119,9 +157,19 @@ export class EduManageDashboard extends Component {
       meta: relativeTime(a.minutesAgo),
     }));
 
-    this.toggleSidebar = this.toggleSidebar.bind(this);
-    this.dismissAlert  = this.dismissAlert.bind(this);
-    this.setNav        = this.setNav.bind(this);
+    // Students & Classes data (with computed initials)
+    this.studentsData = STUDENTS_DATA.map((s) => ({
+      ...s,
+      initials: s.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2),
+    }));
+    this.classesData = CLASSES_DATA;
+
+    this.toggleSidebar      = this.toggleSidebar.bind(this);
+    this.dismissAlert       = this.dismissAlert.bind(this);
+    this.setNav             = this.setNav.bind(this);
+    this.onStudentSearch    = this.onStudentSearch.bind(this);
+    this.setStudentsSubTab  = this.setStudentsSubTab.bind(this);
+    this.setStudentFilter   = this.setStudentFilter.bind(this);
 
     // Sync activeNav from router state on popstate/ROUTE_CHANGE
     const onRoute = () => {
@@ -148,9 +196,19 @@ export class EduManageDashboard extends Component {
       try {
         const institutions = await this.orm.searchRead(
           "edumanage.institution", [["setup_complete", "=", true]],
-          ["name"], { limit: 1 }
+          ["name", "id"], { limit: 1 }
         );
-        if (institutions.length) this.state.institutionName = institutions[0].name;
+        if (institutions.length) {
+          this.state.institutionName = institutions[0].name;
+          this.state.institutionId = institutions[0].id;
+        } else {
+          const anyInst = await this.orm.searchRead(
+            "edumanage.institution", [], ["id"], { limit: 1 }
+          );
+          if (anyInst.length) {
+            this.state.institutionId = anyInst[0].id;
+          }
+        }
       } catch (_) { /* module may not be ready */ }
     } catch (_) { /* silently handle */ }
   }
@@ -158,6 +216,20 @@ export class EduManageDashboard extends Component {
   toggleSidebar() { this.state.sidebarCollapsed = !this.state.sidebarCollapsed; }
   dismissAlert()  { this.state.showAlert = false; }
   setNav(id) {
+    if (id === "institution") {
+      if (this.state.institutionId) {
+        this.action.doAction({
+          type: "ir.actions.act_window",
+          res_model: "edumanage.institution",
+          res_id: this.state.institutionId,
+          views: [[false, "form"]],
+          target: "current",
+        });
+      } else {
+        this.action.doAction("edumanage_setup.action_edumanage_institution");
+      }
+      return;
+    }
     this.state.activeNav = id;
     router.pushState({ activeNav: id });
   }
@@ -166,6 +238,30 @@ export class EduManageDashboard extends Component {
     const nav = this.state.activeNav || "dashboard";
     return nav.charAt(0).toUpperCase() + nav.slice(1);
   }
+
+  // ── Students helpers ─────────────────────────────────────────
+  get filteredStudents() {
+    let list = this.studentsData;
+    const filter = this.state.studentFilter;
+    if (filter === "active")   list = list.filter(s => s.status === "active");
+    if (filter === "inactive") list = list.filter(s => s.status === "inactive");
+    if (filter === "feeDue")   list = list.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue");
+    const q = (this.state.studentSearch || "").toLowerCase().trim();
+    if (q) {
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.studentId.toLowerCase().includes(q) ||
+        s.className.toLowerCase().includes(q) ||
+        s.guardian.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  getStudentFilters() { return STUDENT_FILTERS; }
+  setStudentsSubTab(tab) { this.state.studentsSubTab = tab; }
+  setStudentFilter(filterId) { this.state.studentFilter = filterId; }
+  onStudentSearch() { /* reactive via t-model */ }
 }
 
 registry.category("actions").add("edumanage_dashboard.main", EduManageDashboard);

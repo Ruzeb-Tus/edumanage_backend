@@ -112,11 +112,10 @@ class InstitutionSetup(models.Model):
         }
 
     def action_open_setup_wizard(self):
+        action = self.env.ref('edumanage_setup.action_edumanage_setup_client', raise_if_not_found=False)
+        if action:
+            return action.read()[0]
         return {
-            'type': 'ir.actions.act_window',
-            'name': _('Institution Setup'),
-            'res_model': 'edumanage.institution.wizard',
-            'view_mode': 'form',
-            'target': 'fullscreen',
-            'context': {'default_institution_id': self.id if self else False},
+            'type': 'ir.actions.client',
+            'tag': 'edumanage_setup.setup_action',
         }

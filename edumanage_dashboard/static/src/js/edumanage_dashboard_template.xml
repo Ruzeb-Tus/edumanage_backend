@@ -222,54 +222,175 @@
           </t>
 
           <!-- ══ STUDENTS TAB ═════════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'students'">
-            <div class="emd-panel">
-              <div class="emd-panel-header">
-                <span class="emd-panel-title">Active Student Roster</span>
-                <button class="emd-action-btn" style="padding: 8px 14px; margin: 0;">+ New Admission</button>
+          <t t-elif="state.activeNav === 'students'">
+
+            <!-- Page Header Bar -->
+            <div class="emd-page-bar">
+              <div class="emd-page-bar-left">
+                <h2 class="emd-page-bar-title">
+                  <t t-if="state.studentsSubTab === 'classes'">Manage Classes</t>
+                  <t t-else="">Student Roster</t>
+                </h2>
+                <span class="emd-page-bar-count">
+                  <t t-if="state.studentsSubTab === 'classes'">
+                    <t t-out="classesData.length"/> Classes
+                  </t>
+                  <t t-else="">
+                    <t t-out="filteredStudents.length"/> Students
+                  </t>
+                </span>
               </div>
-              <div class="emd-panel-body">
-                <div style="display: grid; gap: 12px; margin-top: 12px;">
-                  <!-- Student 1 -->
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                      <div style="width: 40px; height: 40px; border-radius: 50%; background: #1a2d6b; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--emd-cyan);">AK</div>
-                      <div>
-                        <div style="font-size: 14px; font-weight: 600;">Arjun Kumar</div>
-                        <div style="font-size: 12px; color: var(--emd-text-3);">ID: EDU-2026-0042 · Class 10A</div>
-                      </div>
-                    </div>
-                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Active</span>
-                  </div>
-                  <!-- Student 2 -->
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                      <div style="width: 40px; height: 40px; border-radius: 50%; background: #1a2d6b; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--emd-cyan);">PM</div>
-                      <div>
-                        <div style="font-size: 14px; font-weight: 600;">Priya Mehta</div>
-                        <div style="font-size: 12px; color: var(--emd-text-3);">ID: EDU-2026-0105 · Class 9B</div>
-                      </div>
-                    </div>
-                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Active</span>
-                  </div>
-                  <!-- Student 3 -->
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                      <div style="width: 40px; height: 40px; border-radius: 50%; background: #1a2d6b; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--emd-cyan);">RV</div>
-                      <div>
-                        <div style="font-size: 14px; font-weight: 600;">Rahul Verma</div>
-                        <div style="font-size: 12px; color: var(--emd-text-3);">ID: EDU-2026-0089 · Class 10A</div>
-                      </div>
-                    </div>
-                    <span style="font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 196, 140, 0.1); color: var(--emd-emerald);">Active</span>
-                  </div>
+              <div class="emd-page-bar-right">
+                <div class="emd-sub-tabs">
+                  <button t-attf-class="emd-sub-tab {{ state.studentsSubTab === 'roster' ? 'active' : '' }}"
+                          t-on-click="() => setStudentsSubTab('roster')">
+                    <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-2px;margin-right:4px">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    Students
+                  </button>
+                  <button t-attf-class="emd-sub-tab {{ state.studentsSubTab === 'classes' ? 'active' : '' }}"
+                          t-on-click="() => setStudentsSubTab('classes')">
+                    <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-2px;margin-right:4px">
+                      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Classes
+                  </button>
                 </div>
+                <button class="emd-btn-add">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <t t-if="state.studentsSubTab === 'classes'">Add Class</t>
+                  <t t-else="">New Admission</t>
+                </button>
               </div>
             </div>
+
+            <!-- ── Students Roster Sub-Tab ──────────────────── -->
+            <t t-if="state.studentsSubTab === 'roster'">
+
+              <!-- Filter Bar -->
+              <div class="emd-filter-bar">
+                <t t-foreach="getStudentFilters()" t-as="f" t-key="f.id">
+                  <div t-attf-class="emd-filter-pill {{ state.studentFilter === f.id ? 'active' : '' }}"
+                       t-on-click="() => setStudentFilter(f.id)">
+                    <t t-out="f.label"/>
+                    <t t-if="f.count">
+                      <span style="opacity:0.7">·</span> <t t-out="f.count"/>
+                    </t>
+                  </div>
+                </t>
+                <div class="emd-filter-search" style="margin-left:auto">
+                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Search students…"
+                         t-model="state.studentSearch"
+                         t-on-input="onStudentSearch"/>
+                </div>
+              </div>
+
+              <!-- Kanban Grid -->
+              <div class="emd-kanban-grid">
+                <t t-foreach="filteredStudents" t-as="s" t-key="s.id">
+                  <div class="emd-student-card">
+                    <div class="emd-student-card-top">
+                      <div t-attf-class="emd-student-avatar {{ s.gender === 'female' ? 'female' : '' }}">
+                        <t t-out="s.initials"/>
+                      </div>
+                      <div class="emd-student-info">
+                        <div class="emd-student-name"><t t-out="s.name"/></div>
+                        <div class="emd-student-id">ID: <t t-out="s.studentId"/> · <t t-out="s.className"/></div>
+                      </div>
+                      <span t-attf-class="emd-student-status {{ s.status }}">
+                        <t t-out="s.statusLabel"/>
+                      </span>
+                    </div>
+
+                    <div class="emd-student-details">
+                      <div class="emd-student-detail">
+                        <span class="emd-student-detail-label">Class</span>
+                        <span class="emd-student-detail-value"><t t-out="s.className"/></span>
+                      </div>
+                      <div class="emd-student-detail">
+                        <span class="emd-student-detail-label">Roll No</span>
+                        <span class="emd-student-detail-value"><t t-out="s.rollNo"/></span>
+                      </div>
+                      <div class="emd-student-detail">
+                        <span class="emd-student-detail-label">Guardian</span>
+                        <span class="emd-student-detail-value"><t t-out="s.guardian"/></span>
+                      </div>
+                      <div class="emd-student-detail">
+                        <span class="emd-student-detail-label">Fee Status</span>
+                        <span class="emd-student-detail-value"><t t-out="s.feeStatus"/></span>
+                      </div>
+                    </div>
+
+                    <div class="emd-student-card-footer">
+                      <div class="emd-student-attendance">
+                        <div t-attf-class="emd-student-attendance-dot {{ s.attendancePct &lt; 85 ? 'warn' : '' }}"/>
+                        <t t-out="s.attendancePct"/>% Attendance
+                      </div>
+                      <span class="emd-student-view">View Profile →</span>
+                    </div>
+                  </div>
+                </t>
+              </div>
+
+              <!-- Empty State -->
+              <t t-if="filteredStudents.length === 0">
+                <div class="emd-empty-state">
+                  <div class="emd-empty-icon">
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </div>
+                  <div class="emd-empty-title">No students found</div>
+                  <div class="emd-empty-desc">Try adjusting your search or filter criteria to find students.</div>
+                </div>
+              </t>
+            </t>
+
+            <!-- ── Manage Classes Sub-Tab ───────────────────── -->
+            <t t-if="state.studentsSubTab === 'classes'">
+              <div class="emd-classes-grid">
+                <t t-foreach="classesData" t-as="c" t-key="c.id">
+                  <div class="emd-class-card">
+                    <div class="emd-class-header">
+                      <div class="emd-class-icon">
+                        <svg viewBox="0 0 24 24">
+                          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                      </div>
+                      <span class="emd-class-badge"><t t-out="c.section"/></span>
+                    </div>
+                    <div class="emd-class-name"><t t-out="c.name"/></div>
+                    <div class="emd-class-teacher">
+                      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--emd-text-3);fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-1px;margin-right:4px">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      <t t-out="c.teacher"/>
+                    </div>
+                    <div class="emd-class-stats">
+                      <div class="emd-class-stat">
+                        <span class="emd-class-stat-value"><t t-out="c.students"/></span>
+                        <span class="emd-class-stat-label">Students</span>
+                      </div>
+                      <div class="emd-class-stat">
+                        <span class="emd-class-stat-value"><t t-out="c.attendance"/>%</span>
+                        <span class="emd-class-stat-label">Attendance</span>
+                      </div>
+                      <div class="emd-class-stat">
+                        <span class="emd-class-stat-value"><t t-out="c.subjects"/></span>
+                        <span class="emd-class-stat-label">Subjects</span>
+                      </div>
+                    </div>
+                  </div>
+                </t>
+              </div>
+            </t>
+
           </t>
 
           <!-- ══ ATTENDANCE TAB ═══════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'attendance'">
+          <t t-elif="state.activeNav === 'attendance'">
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">Daily Class Attendance Tracker</span>
@@ -298,7 +419,7 @@
           </t>
 
           <!-- ══ FEES TAB ═════════════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'fees'">
+          <t t-elif="state.activeNav === 'fees'">
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">Pending &amp; Outstanding Collections</span>
@@ -333,7 +454,7 @@
           </t>
 
           <!-- ══ DOCUMENTS TAB ════════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'documents'">
+          <t t-elif="state.activeNav === 'documents'">
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">Document Hub</span>
@@ -364,7 +485,7 @@
           </t>
 
           <!-- ══ REPORTS TAB ══════════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'reports'">
+          <t t-elif="state.activeNav === 'reports'">
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">Academic &amp; Financial Reports</span>
@@ -393,7 +514,7 @@
           </t>
 
           <!-- ══ TIMETABLE TAB ════════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'timetable'">
+          <t t-elif="state.activeNav === 'timetable'">
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">Weekly Timetable Grid</span>
@@ -430,7 +551,7 @@
           </t>
 
           <!-- ══ SETTINGS TAB ═════════════════════════════════ -->
-          <t t-else-if="state.activeNav === 'settings'">
+          <t t-elif="state.activeNav === 'settings'">
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">System &amp; General Settings</span>

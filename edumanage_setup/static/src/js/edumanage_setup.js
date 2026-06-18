@@ -81,6 +81,9 @@ export class EduManageSetup extends Component {
       estYear:      "",
       strength:     "",
     });
+
+    this.institutionId = null;
+    onMounted(() => this._loadExistingInstitution());
   }
 
   // ── Validation ──────────────────────────────────────────────
@@ -210,13 +213,23 @@ export class EduManageSetup extends Component {
         total_students: this.state.strength,
         setup_complete: true,
       };
-      if (logoB64) vals.logo = logoB64;
+      if (logoB64) {
+        vals.logo = logoB64;
+      } else if (this.state.logoPreview === null) {
+        vals.logo = false;
+      }
 
-      const id = await this.orm.create("edumanage.institution", [vals]);
+      let id;
+      if (this.institutionId) {
+        await this.orm.write("edumanage.institution", [this.institutionId], vals);
+        id = this.institutionId;
+      } else {
+        id = await this.orm.create("edumanage.institution", [vals]);
+      }
 
       this.notification.add(
         `${this.state.institutionName} has been set up successfully. Welcome to EduManage!`,
-        { type: "success", title: "Institution Created" }
+        { type: "success", title: this.institutionId ? "Institution Updated" : "Institution Created" }
       );
 
       await this.action.doAction({
@@ -232,6 +245,37 @@ export class EduManageSetup extends Component {
       this.notification.add("Something went wrong. Please try again.", { type: "danger" });
     } finally {
       this.state.saving = false;
+    }
+  }
+
+  async _loadExistingInstitution() {
+    try {
+      const institutions = await this.orm.searchRead(
+        "edumanage.institution", [],
+        ["name", "logo", "institution_type", "email", "phone", "website", "street", "city", "zip", "board_affiliation", "affiliation_number", "established_year", "total_students"],
+        { limit: 1 }
+      );
+      if (institutions.length) {
+        const inst = institutions[0];
+        this.institutionId = inst.id;
+        this.state.institutionName = inst.name || "";
+        this.state.institutionType = inst.institution_type || "";
+        this.state.email = inst.email || "";
+        this.state.phone = inst.phone || "";
+        this.state.website = inst.website || "";
+        this.state.address = inst.street || "";
+        this.state.city = inst.city || "";
+        this.state.zip = inst.zip || "";
+        this.state.board = inst.board_affiliation || "";
+        this.state.affNumber = inst.affiliation_number || "";
+        this.state.estYear = inst.established_year ? inst.established_year.toString() : "";
+        this.state.strength = inst.total_students || "";
+        if (inst.logo) {
+          this.state.logoPreview = "data:image/png;base64," + inst.logo;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load existing institution", err);
     }
   }
 

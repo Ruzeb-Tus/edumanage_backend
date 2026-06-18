@@ -1,4 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_edumanage_institution_manager,edumanage.institution.manager,model_edumanage_institution,base.group_system,1,1,1,1
-access_edumanage_institution_user,edumanage.institution.user,model_edumanage_institution,base.group_user,1,0,0,0
+access_edumanage_institution_user,edumanage.institution.user,model_edumanage_institution,base.group_user,1,1,1,1
 access_edumanage_institution_wizard,edumanage.institution.wizard,model_edumanage_institution_wizard,base.group_user,1,1,1,1

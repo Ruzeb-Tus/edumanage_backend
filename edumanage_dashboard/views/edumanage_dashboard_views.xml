@@ -15,5 +15,9 @@
         action="action_edumanage_dashboard"
         sequence="1"
     />
+    <!-- Update the Root Menu to explicitly open Dashboard -->
+    <record id="edumanage_setup.menu_edumanage_root" model="ir.ui.menu">
+        <field name="action" ref="action_edumanage_dashboard"/>
+    </record>
 
 </odoo>

@@ -20,4 +20,9 @@ class IrHttp(models.AbstractModel):
             except Exception:
                 pass
         result['edumanage_actions'] = action_ids
+        
+        # Override default landing page / home action to be the dashboard
+        if 'dashboard' in action_ids:
+            result['home_action_id'] = action_ids['dashboard']
+            
         return result

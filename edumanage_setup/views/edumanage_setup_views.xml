@@ -8,88 +8,233 @@
         <field name="name">edumanage.institution.form</field>
         <field name="model">edumanage.institution</field>
         <field name="arch" type="xml">
-            <form string="Institution" class="em-institution-form">
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_complete_setup"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-check-circle"
-                                invisible="setup_complete">
-                            <span>Mark Setup Complete</span>
-                        </button>
+            <form string="Institution" class="em-institution-form" create="false" delete="false">
+                <field name="setup_complete" invisible="1"/>
+                <sheet class="em-premium-sheet">
+                    <!-- Hero Banner -->
+                    <div class="em-hero-banner">
+                        <div class="em-hero-left">
+                            <div class="em-hero-logo">
+                                <field name="logo" widget="image" options="{'size': [80, 80]}" invisible="not logo"/>
+                                <div class="em-hero-logo-placeholder" invisible="logo">
+                                    <i class="ti ti-building"></i>
+                                </div>
+                            </div>
+                            <div class="em-hero-info">
+                                <h1 class="em-hero-name">
+                                    <field name="name" readonly="1"/>
+                                </h1>
+                                <div class="em-hero-meta">
+                                    <div class="em-type-badge">
+                                        <field name="institution_type" readonly="1"/>
+                                    </div>
+                                    <span class="em-hero-location">
+                                        <field name="city" readonly="1"/> <span invisible="not city or not country_id">·</span> <field name="country_id" readonly="1"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="em-hero-right">
+                            <div class="em-status-badge" invisible="not setup_complete">
+                                <div class="em-status-dot"></div>
+                                Setup Complete
+                            </div>
+                            <div class="em-status-badge incomplete" invisible="setup_complete">
+                                <div class="em-status-dot"></div>
+                                Setup Pending
+                            </div>
+                            <div class="em-hero-actions">
+                                <button name="action_open_setup_wizard" type="object" class="em-btn-ghost">
+                                    Edit Profile
+                                </button>
+                                <button name="%(edumanage_dashboard.action_edumanage_dashboard)d" type="action" class="em-btn-primary">
+                                    View Dashboard
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Logo & Name header -->
-                    <widget name="web_ribbon"
-                            title="Setup Complete"
-                            bg_color="bg-success"
-                            invisible="not setup_complete"/>
+                    <!-- Content Grid -->
+                    <div class="em-content-grid">
+                        <!-- Left Column -->
+                        <div class="em-col-left">
+                            
+                            <!-- Contact Card -->
+                            <div class="em-premium-card">
+                                <div class="em-card-header">
+                                    <div class="em-card-title">Contact Details</div>
+                                    <button name="action_open_setup_wizard" type="object" class="em-card-edit">
+                                        Edit <span class="em-arrow">→</span>
+                                    </button>
+                                </div>
+                                <div class="em-field-grid">
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Official Email</div>
+                                        <div class="em-data-value"><field name="email" widget="email" class="em-link" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Phone Number</div>
+                                        <div class="em-data-value"><field name="phone" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Website</div>
+                                        <div class="em-data-value">
+                                            <field name="website" widget="url" class="em-link" invisible="not website" readonly="1"/>
+                                            <span invisible="website" class="text-muted">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Established Year</div>
+                                        <div class="em-data-value"><field name="established_year" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Student Strength</div>
+                                        <div class="em-data-value"><field name="total_students" readonly="1"/></div>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <field name="logo" widget="image"
-                           class="oe_avatar"
-                           options="{'preview_image': 'logo'}"/>
+                            <!-- Address Card -->
+                            <div class="em-premium-card">
+                                <div class="em-card-header">
+                                    <div class="em-card-title">Location Address</div>
+                                </div>
+                                <div class="em-field-grid">
+                                    <div class="em-data-row em-col-span-2">
+                                        <div class="em-data-label">Address Line 1</div>
+                                        <div class="em-data-value"><field name="street" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">City</div>
+                                        <div class="em-data-value"><field name="city" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">State</div>
+                                        <div class="em-data-value"><field name="state_id" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Country</div>
+                                        <div class="em-data-value">📍 <field name="country_id" readonly="1"/></div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">PIN / ZIP</div>
+                                        <div class="em-data-value"><span class="em-mono-pill"><field name="zip" readonly="1"/></span></div>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div class="oe_title">
-                        <label class="o_field_widget" for="name" string="Institution Name"/>
-                        <h1>
-                            <field name="name" placeholder="Institution Name"/>
-                        </h1>
-                        <field name="institution_type"
-                               widget="radio"
-                               options="{'horizontal': true}"/>
-                    </div>
+                            <!-- Academic Profile -->
+                            <div class="em-premium-card">
+                                <div class="em-card-header">
+                                    <div class="em-card-title">Academic Profile</div>
+                                </div>
+                                <div class="em-field-grid">
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Board Affiliation</div>
+                                        <div class="em-data-value">
+                                            <span class="em-board-pill" invisible="not board_affiliation"><field name="board_affiliation" readonly="1"/></span>
+                                            <span invisible="board_affiliation" class="text-muted">Not Set</span>
+                                        </div>
+                                    </div>
+                                    <div class="em-data-row">
+                                        <div class="em-data-label">Affiliation Number</div>
+                                        <div class="em-data-value">
+                                            <span class="em-mono-pill" invisible="not affiliation_number"><field name="affiliation_number" readonly="1"/></span>
+                                            <span invisible="affiliation_number" class="text-muted">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <notebook>
-                        <page string="Contact Details" name="contact">
-                            <group>
-                                <group>
-                                    <field name="email"/>
-                                    <field name="phone"/>
-                                    <field name="website" widget="url"/>
-                                </group>
-                                <group>
-                                    <field name="established_year"/>
-                                    <field name="total_students"/>
-                                </group>
-                            </group>
-                            <separator string="Address"/>
-                            <group>
-                                <group>
-                                    <field name="street"/>
-                                    <field name="city"/>
-                                    <field name="state_id"/>
-                                </group>
-                                <group>
-                                    <field name="zip"/>
-                                    <field name="country_id"/>
-                                </group>
-                            </group>
-                        </page>
+                        <!-- Right Column -->
+                        <div class="em-col-right">
+                            
+                            <!-- Quick Stats Card -->
+                            <div class="em-premium-card">
+                                <div class="em-card-header" style="margin-bottom: 16px;">
+                                    <div class="em-card-title">Overview</div>
+                                </div>
+                                <div class="em-stat-row">
+                                    <div class="em-stat-left">
+                                        <div class="em-stat-icon"></div>
+                                        <div class="em-stat-label">Total Students</div>
+                                    </div>
+                                    <div class="em-stat-value">1,284</div>
+                                </div>
+                                <div class="em-stat-row">
+                                    <div class="em-stat-left">
+                                        <div class="em-stat-icon"></div>
+                                        <div class="em-stat-label">Total Classes</div>
+                                    </div>
+                                    <div class="em-stat-value">34</div>
+                                </div>
+                                <div class="em-stat-row">
+                                    <div class="em-stat-left">
+                                        <div class="em-stat-icon"></div>
+                                        <div class="em-stat-label">Est. Year</div>
+                                    </div>
+                                    <div class="em-stat-value"><field name="established_year" readonly="1"/></div>
+                                </div>
+                                <div class="em-stat-row">
+                                    <div class="em-stat-left">
+                                        <div class="em-stat-icon"></div>
+                                        <div class="em-stat-label">Board</div>
+                                    </div>
+                                    <div class="em-stat-value"><field name="board_affiliation" readonly="1"/></div>
+                                </div>
+                            </div>
 
-                        <page string="Academic Profile" name="academic">
-                            <group>
-                                <group>
-                                    <field name="board_affiliation"/>
-                                    <field name="affiliation_number"/>
-                                </group>
-                            </group>
-                        </page>
-
-                        <page string="Log" name="log">
+                            <!-- Setup Status Card -->
+                            <div class="em-premium-card">
+                                <div class="em-card-header" style="margin-bottom: 20px;">
+                                    <div class="em-card-title">Setup Progress</div>
+                                </div>
+                                <div class="em-timeline">
+                                    <div class="em-timeline-step">
+                                        <div class="em-timeline-dot done"></div>
+                                        <div class="em-timeline-content">
+                                            <div class="em-timeline-label">Institution Identity</div>
+                                            <div class="em-timeline-status done">✓ Complete</div>
+                                        </div>
+                                    </div>
+                                    <div class="em-timeline-step">
+                                        <div class="em-timeline-dot done"></div>
+                                        <div class="em-timeline-content">
+                                            <div class="em-timeline-label">Contact Details</div>
+                                            <div class="em-timeline-status done">✓ Complete</div>
+                                        </div>
+                                    </div>
+                                    <div class="em-timeline-step">
+                                        <div class="em-timeline-dot done" invisible="not board_affiliation"></div>
+                                        <div class="em-timeline-dot pending" invisible="board_affiliation"></div>
+                                        <div class="em-timeline-content">
+                                            <div class="em-timeline-label">Academic Profile</div>
+                                            <div class="em-timeline-status done" invisible="not board_affiliation">✓ Complete</div>
+                                            <div class="em-timeline-status pending" invisible="board_affiliation">⚠ Incomplete</div>
+                                        </div>
+                                    </div>
+                                    <div class="em-timeline-step">
+                                        <div class="em-timeline-dot done" invisible="not setup_complete"></div>
+                                        <div class="em-timeline-dot pending" invisible="setup_complete"></div>
+                                        <div class="em-timeline-content">
+                                            <div class="em-timeline-label">Dashboard Configured</div>
+                                            <div class="em-timeline-status done" invisible="not setup_complete">✓ Complete</div>
+                                            <div class="em-timeline-status pending" invisible="setup_complete">⚠ Pending</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Chatter -->
                             <div class="oe_chatter">
                                 <field name="message_follower_ids"/>
                                 <field name="activity_ids"/>
                                 <field name="message_ids"/>
                             </div>
-                        </page>
-                    </notebook>
+                        </div>
+                    </div>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
