@@ -27,6 +27,14 @@ router.stateToUrl = function (state) {
     // Check for dashboard action
     if (state.action === dashboardId || state.action === 'edumanage_dashboard.action_edumanage_dashboard' || state.action === 'edumanage_dashboard.main') {
         const activeNav = state.activeNav || 'dashboard';
+        if (activeNav === 'students') {
+            if (state.studentsView === 'admission') {
+                return '/students/admission';
+            }
+            if (state.studentsView === 'profile' && state.studentId) {
+                return `/students/profile/${state.studentId}`;
+            }
+        }
         if (STATE_TO_URL_MAP[activeNav]) {
             return STATE_TO_URL_MAP[activeNav];
         }
@@ -54,11 +62,28 @@ router.urlToState = function (urlObj) {
     if (pathname === '/institution') {
         return { action: setupClientId || 'edumanage_setup.action_edumanage_setup_client' };
     }
+    if (pathname === '/students/admission') {
+        return {
+            action: dashboardId || 'edumanage_dashboard.action_edumanage_dashboard',
+            activeNav: 'students',
+            studentsView: 'admission',
+        };
+    }
+    const profileMatch = pathname.match(/^\/students\/profile\/(\d+)$/);
+    if (profileMatch) {
+        return {
+            action: dashboardId || 'edumanage_dashboard.action_edumanage_dashboard',
+            activeNav: 'students',
+            studentsView: 'profile',
+            studentId: profileMatch[1],
+        };
+    }
     if (['/students', '/attendance', '/fees', '/documents', '/reports'].includes(pathname)) {
         const activeNav = pathname.substring(1); // e.g. 'students'
         return {
             action: dashboardId || 'edumanage_dashboard.action_edumanage_dashboard',
-            activeNav: activeNav
+            activeNav: activeNav,
+            studentsView: 'roster',
         };
     }
 

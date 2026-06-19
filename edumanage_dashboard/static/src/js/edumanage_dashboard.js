@@ -83,12 +83,38 @@ const CLASSES_DATA = [
   { id: 6, name: "Class 5C",   section: "Foundation", teacher: "Ms. Verma",       students: 24, attendance: 97, subjects: 6 },
 ];
 
-const STUDENT_FILTERS = [
-  { id: "all",     label: "All Students", count: STUDENTS_DATA.length },
-  { id: "active",  label: "Active",       count: STUDENTS_DATA.filter(s => s.status === "active").length },
-  { id: "inactive",label: "Inactive",     count: STUDENTS_DATA.filter(s => s.status === "inactive").length },
-  { id: "feeDue",  label: "Fee Due",      count: STUDENTS_DATA.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue").length },
-];
+function mapStudentInitials(student) {
+  return {
+    ...student,
+    initials: student.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2),
+  };
+}
+
+function todayISO() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function emptyAdmissionForm() {
+  return {
+    name: "",
+    photoPreview: null,
+    photoB64: null,
+    gender: "male",
+    date_of_birth: "",
+    class_id: "",
+    section_id: "",
+    admission_date: todayISO(),
+    roll_no: "",
+    father_name: "",
+    mother_name: "",
+    parent_phone: "",
+    parent_email: "",
+    address: "",
+    city: "",
+    state_id: "",
+    country_id: "",
+  };
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -129,6 +155,8 @@ export class EduManageDashboard extends Component {
 
     // Read activeNav from router state at start
     const initialNav = router.current.activeNav || "dashboard";
+    const initialStudentsView = router.current.studentsView || "roster";
+    const initialStudentId = router.current.studentId ? parseInt(router.current.studentId, 10) : null;
 
     this.state = useState({
       sidebarCollapsed: false,
@@ -145,8 +173,19 @@ export class EduManageDashboard extends Component {
       dateCaps: date.dateCaps,
       // Students tab state
       studentsSubTab: "roster",
+      studentsView: initialStudentsView,
+      selectedStudentId: initialStudentId,
+      selectedStudent: null,
       studentFilter: "all",
       studentSearch: "",
+      students: STUDENTS_DATA.map(mapStudentInitials),
+      studentsLoaded: false,
+      classesOptions: [],
+      countries: [],
+      states: [],
+      admissionForm: emptyAdmissionForm(),
+      admissionErrors: {},
+      admissionSaving: false,
     });
 
     this.navItems     = NAV_ITEMS;
@@ -157,11 +196,7 @@ export class EduManageDashboard extends Component {
       meta: relativeTime(a.minutesAgo),
     }));
 
-    // Students & Classes data (with computed initials)
-    this.studentsData = STUDENTS_DATA.map((s) => ({
-      ...s,
-      initials: s.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2),
-    }));
+    // Students & Classes data
     this.classesData = CLASSES_DATA;
 
     this.toggleSidebar      = this.toggleSidebar.bind(this);
@@ -170,6 +205,15 @@ export class EduManageDashboard extends Component {
     this.onStudentSearch    = this.onStudentSearch.bind(this);
     this.setStudentsSubTab  = this.setStudentsSubTab.bind(this);
     this.setStudentFilter   = this.setStudentFilter.bind(this);
+    this.openNewAdmission   = this.openNewAdmission.bind(this);
+    this.cancelAdmission    = this.cancelAdmission.bind(this);
+    this.saveAdmission      = this.saveAdmission.bind(this);
+    this.openStudentProfile = this.openStudentProfile.bind(this);
+    this.backToRoster       = this.backToRoster.bind(this);
+    this.onAdmissionClassChange = this.onAdmissionClassChange.bind(this);
+    this.onAdmissionCountryChange = this.onAdmissionCountryChange.bind(this);
+    this.onPhotoSelect      = this.onPhotoSelect.bind(this);
+    this.removePhoto        = this.removePhoto.bind(this);
 
     // Sync activeNav from router state on popstate/ROUTE_CHANGE
     const onRoute = () => {
@@ -177,15 +221,90 @@ export class EduManageDashboard extends Component {
       if (this.state.activeNav !== activeNav) {
         this.state.activeNav = activeNav;
       }
+      const studentsView = router.current.studentsView || "roster";
+      if (this.state.studentsView !== studentsView) {
+        this.state.studentsView = studentsView;
+      }
+      const studentId = router.current.studentId ? parseInt(router.current.studentId, 10) : null;
+      if (this.state.selectedStudentId !== studentId) {
+        this.state.selectedStudentId = studentId;
+        if (studentId && this.state.studentsView === "profile") {
+          this._loadStudentProfile(studentId);
+        }
+      }
     };
     routerBus.addEventListener("ROUTE_CHANGE", onRoute);
     onWillUnmount(() => {
       routerBus.removeEventListener("ROUTE_CHANGE", onRoute);
     });
 
-    onMounted(() => this._loadUserInfo());
+    onMounted(async () => {
+      await this._loadUserInfo();
+      await this._loadStudents();
+      if (this.state.studentsView === "profile" && this.state.selectedStudentId) {
+        await this._loadStudentProfile(this.state.selectedStudentId);
+      }
+    });
   }
 
+  async _loadStudents() {
+    try {
+      const students = await this.orm.call(
+        "edumanage.student", "check_and_populate_demo_data", []
+      );
+      this.state.students = (students || []).map(mapStudentInitials);
+      this.state.studentsLoaded = true;
+    } catch (_) {
+      this.state.studentsLoaded = true;
+    }
+  }
+
+  async _loadAdmissionOptions() {
+    try {
+      const [options, countries] = await Promise.all([
+        this.orm.call("edumanage.student", "get_admission_form_options", []),
+        this.orm.searchRead("res.country", [], ["name"], { order: "name asc" }),
+      ]);
+      this.state.classesOptions = options?.classes || [];
+      this.state.countries = countries || [];
+      if (options?.default_country_id && !this.state.admissionForm.country_id) {
+        this.state.admissionForm.country_id = String(options.default_country_id);
+        await this._loadStates(options.default_country_id);
+      }
+    } catch (_) {
+      this.state.classesOptions = [];
+    }
+  }
+
+  async _loadStates(countryId) {
+    if (!countryId) {
+      this.state.states = [];
+      return;
+    }
+    try {
+      this.state.states = await this.orm.searchRead(
+        "res.country.state",
+        [["country_id", "=", parseInt(countryId, 10)]],
+        ["name"],
+        { order: "name asc" }
+      );
+    } catch (_) {
+      this.state.states = [];
+    }
+  }
+
+  async _loadStudentProfile(studentId) {
+    try {
+      const profile = await this.orm.call(
+        "edumanage.student", "get_student_profile", [studentId]
+      );
+      if (profile) {
+        this.state.selectedStudent = mapStudentInitials(profile);
+      }
+    } catch (_) {
+      this.state.selectedStudent = this.state.students.find(s => s.id === studentId) || null;
+    }
+  }
   async _loadUserInfo() {
     try {
       const [user] = await this.orm.read("res.users", [this.env.uid || 1], ["name"]);
@@ -231,17 +350,26 @@ export class EduManageDashboard extends Component {
       return;
     }
     this.state.activeNav = id;
-    router.pushState({ activeNav: id });
+    if (id !== "students") {
+      this.state.studentsView = "roster";
+      this.state.selectedStudentId = null;
+      this.state.selectedStudent = null;
+    }
+    router.pushState({ activeNav: id, studentsView: id === "students" ? this.state.studentsView : "roster" });
   }
 
   get activeTitle() {
+    if (this.state.activeNav === "students") {
+      if (this.state.studentsView === "admission") return "New Admission";
+      if (this.state.studentsView === "profile") return "Student Profile";
+    }
     const nav = this.state.activeNav || "dashboard";
     return nav.charAt(0).toUpperCase() + nav.slice(1);
   }
 
   // ── Students helpers ─────────────────────────────────────────
   get filteredStudents() {
-    let list = this.studentsData;
+    let list = this.state.students;
     const filter = this.state.studentFilter;
     if (filter === "active")   list = list.filter(s => s.status === "active");
     if (filter === "inactive") list = list.filter(s => s.status === "inactive");
@@ -258,7 +386,154 @@ export class EduManageDashboard extends Component {
     return list;
   }
 
-  getStudentFilters() { return STUDENT_FILTERS; }
+  get admissionSections() {
+    const classId = parseInt(this.state.admissionForm.class_id, 10);
+    if (!classId) return [];
+    const cls = this.state.classesOptions.find(c => c.id === classId);
+    return cls?.sections || [];
+  }
+
+  getStudentFilters() {
+    const students = this.state.students;
+    return [
+      { id: "all", label: "All Students", count: students.length },
+      { id: "active", label: "Active", count: students.filter(s => s.status === "active").length },
+      { id: "inactive", label: "Inactive", count: students.filter(s => s.status === "inactive").length },
+      {
+        id: "feeDue",
+        label: "Fee Due",
+        count: students.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue").length,
+      },
+    ];
+  }
+
+  _pushStudentsRoute(extra = {}) {
+    router.pushState({
+      activeNav: "students",
+      studentsView: this.state.studentsView,
+      ...(this.state.selectedStudentId ? { studentId: this.state.selectedStudentId } : {}),
+      ...extra,
+    });
+  }
+
+  async openNewAdmission() {
+    if (this.state.studentsSubTab !== "roster") return;
+    this.state.admissionForm = emptyAdmissionForm();
+    this.state.admissionErrors = {};
+    this.state.admissionSaving = false;
+    this.state.studentsView = "admission";
+    this.state.selectedStudentId = null;
+    this.state.selectedStudent = null;
+    await this._loadAdmissionOptions();
+    this._pushStudentsRoute({ studentsView: "admission", studentId: undefined });
+  }
+
+  cancelAdmission() {
+    this.backToRoster();
+  }
+
+  backToRoster() {
+    this.state.studentsView = "roster";
+    this.state.selectedStudentId = null;
+    this.state.selectedStudent = null;
+    this.state.admissionErrors = {};
+    router.pushState({ activeNav: "students", studentsView: "roster" });
+  }
+
+  async openStudentProfile(studentId) {
+    this.state.studentsView = "profile";
+    this.state.selectedStudentId = studentId;
+    await this._loadStudentProfile(studentId);
+    this._pushStudentsRoute({ studentsView: "profile", studentId });
+  }
+
+  onAdmissionClassChange() {
+    this.state.admissionForm.section_id = "";
+  }
+
+  async onAdmissionCountryChange() {
+    this.state.admissionForm.state_id = "";
+    await this._loadStates(this.state.admissionForm.country_id);
+  }
+
+  onPhotoSelect(ev) {
+    const file = ev.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.state.admissionForm.photoPreview = e.target.result;
+      this.state.admissionForm.photoB64 = e.target.result.split(",")[1];
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removePhoto() {
+    this.state.admissionForm.photoPreview = null;
+    this.state.admissionForm.photoB64 = null;
+  }
+
+  _validateAdmission() {
+    const form = this.state.admissionForm;
+    const errors = {};
+    if (!form.name?.trim()) errors.name = "Student name is required";
+    if (!form.class_id) errors.class_id = "Class is required";
+    if (!form.section_id) errors.section_id = "Section is required";
+    if (!form.admission_date) errors.admission_date = "Admission date is required";
+    this.state.admissionErrors = errors;
+    return Object.keys(errors).length === 0;
+  }
+
+  async saveAdmission() {
+    if (!this._validateAdmission() || this.state.admissionSaving) return;
+    this.state.admissionSaving = true;
+    const form = this.state.admissionForm;
+    const vals = {
+      name: form.name.trim(),
+      gender: form.gender,
+      class_id: parseInt(form.class_id, 10),
+      section_id: parseInt(form.section_id, 10),
+      admission_date: form.admission_date,
+    };
+    if (form.date_of_birth) vals.date_of_birth = form.date_of_birth;
+    if (form.roll_no?.trim()) vals.roll_no = form.roll_no.trim();
+    if (form.father_name?.trim()) vals.father_name = form.father_name.trim();
+    if (form.mother_name?.trim()) vals.mother_name = form.mother_name.trim();
+    if (form.parent_phone?.trim()) vals.parent_phone = form.parent_phone.trim();
+    if (form.parent_email?.trim()) vals.parent_email = form.parent_email.trim();
+    if (form.address?.trim()) vals.address = form.address.trim();
+    if (form.city?.trim()) vals.city = form.city.trim();
+    if (form.state_id) vals.state_id = parseInt(form.state_id, 10);
+    if (form.country_id) vals.country_id = parseInt(form.country_id, 10);
+    if (form.photoB64) vals.photo = form.photoB64;
+
+    try {
+      const studentId = await this.orm.create("edumanage.student", [vals]);
+      await this._loadStudents();
+      this.state.admissionSaving = false;
+      await this.openStudentProfile(studentId);
+    } catch (err) {
+      this.state.admissionSaving = false;
+      this.state.admissionErrors = { _form: err.message || "Could not save admission. Please try again." };
+    }
+  }
+
+  photoSrc(student) {
+    if (!student?.photo) return null;
+    if (typeof student.photo === "string" && student.photo.startsWith("data:")) {
+      return student.photo;
+    }
+    return `data:image/png;base64,${student.photo}`;
+  }
+
+  formatMany2one(field) {
+    return field && field[1] ? field[1] : "—";
+  }
+
+  formatGender(gender) {
+    if (!gender) return "—";
+    return gender.charAt(0).toUpperCase() + gender.slice(1);
+  }
+
   setStudentsSubTab(tab) { this.state.studentsSubTab = tab; }
   setStudentFilter(filterId) { this.state.studentFilter = filterId; }
   onStudentSearch() { /* reactive via t-model */ }

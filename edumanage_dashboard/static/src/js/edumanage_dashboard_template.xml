@@ -224,7 +224,274 @@
           <!-- ══ STUDENTS TAB ═════════════════════════════════ -->
           <t t-elif="state.activeNav === 'students'">
 
-            <!-- Page Header Bar -->
+            <!-- ── New Admission Form ───────────────────────── -->
+            <t t-if="state.studentsView === 'admission'">
+              <div class="emd-admission-wrap">
+                <div class="emd-admission-header">
+                  <button class="emd-btn-back" t-on-click="backToRoster">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Students
+                  </button>
+                  <div class="emd-admission-header-text">
+                    <h2 class="emd-page-bar-title">New Student Admission</h2>
+                    <p class="emd-admission-subtitle">Register a new student with class and section assignment</p>
+                  </div>
+                </div>
+
+                <t t-if="state.admissionErrors._form">
+                  <div class="emd-admission-form-error"><t t-out="state.admissionErrors._form"/></div>
+                </t>
+
+                <form class="emd-admission-form" t-on-submit.prevent="saveAdmission">
+                  <!-- Student Information -->
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Student Information</div>
+                    <div class="em-grid-2">
+                      <div t-attf-class="em-field {{ state.admissionErrors.name ? 'em-field-error' : '' }}">
+                        <label class="em-label em-label-required">Student Name</label>
+                        <input type="text" class="em-input" placeholder="Enter full name"
+                               t-model="state.admissionForm.name"/>
+                        <t t-if="state.admissionErrors.name">
+                          <span class="em-error-msg"><t t-out="state.admissionErrors.name"/></span>
+                        </t>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Student Photo</label>
+                        <div class="emd-photo-upload">
+                          <t t-if="state.admissionForm.photoPreview">
+                            <div class="emd-photo-preview">
+                              <img t-att-src="state.admissionForm.photoPreview" alt="Student photo"/>
+                              <button type="button" class="emd-photo-remove" t-on-click="removePhoto">✕</button>
+                            </div>
+                          </t>
+                          <t t-else="">
+                            <label class="emd-photo-dropzone">
+                              <input type="file" accept="image/*" t-on-change="onPhotoSelect"/>
+                              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              <span>Upload photo</span>
+                            </label>
+                          </t>
+                        </div>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label em-label-required">Gender</label>
+                        <select class="em-select" t-model="state.admissionForm.gender">
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Date of Birth</label>
+                        <input type="date" class="em-input" t-model="state.admissionForm.date_of_birth"/>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Academic Information -->
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Academic Information</div>
+                    <div class="em-grid-2">
+                      <div t-attf-class="em-field {{ state.admissionErrors.class_id ? 'em-field-error' : '' }}">
+                        <label class="em-label em-label-required">Class</label>
+                        <select class="em-select" t-model="state.admissionForm.class_id"
+                                t-on-change="onAdmissionClassChange">
+                          <option value="">Select class</option>
+                          <t t-foreach="state.classesOptions" t-as="cls" t-key="cls.id">
+                            <option t-att-value="cls.id"><t t-out="cls.name"/></option>
+                          </t>
+                        </select>
+                        <t t-if="state.admissionErrors.class_id">
+                          <span class="em-error-msg"><t t-out="state.admissionErrors.class_id"/></span>
+                        </t>
+                      </div>
+                      <div t-attf-class="em-field {{ state.admissionErrors.section_id ? 'em-field-error' : '' }}">
+                        <label class="em-label em-label-required">Section</label>
+                        <select class="em-select" t-model="state.admissionForm.section_id"
+                                t-att-disabled="!state.admissionForm.class_id">
+                          <option value="">Select section</option>
+                          <t t-foreach="admissionSections" t-as="sec" t-key="sec.id">
+                            <option t-att-value="sec.id"><t t-out="sec.name"/></option>
+                          </t>
+                        </select>
+                        <t t-if="state.admissionErrors.section_id">
+                          <span class="em-error-msg"><t t-out="state.admissionErrors.section_id"/></span>
+                        </t>
+                      </div>
+                      <div t-attf-class="em-field {{ state.admissionErrors.admission_date ? 'em-field-error' : '' }}">
+                        <label class="em-label em-label-required">Admission Date</label>
+                        <input type="date" class="em-input" t-model="state.admissionForm.admission_date"/>
+                        <t t-if="state.admissionErrors.admission_date">
+                          <span class="em-error-msg"><t t-out="state.admissionErrors.admission_date"/></span>
+                        </t>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Roll Number</label>
+                        <input type="text" class="em-input" placeholder="e.g. 12"
+                               t-model="state.admissionForm.roll_no"/>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Parent Information -->
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Parent Information</div>
+                    <div class="em-grid-2">
+                      <div class="em-field">
+                        <label class="em-label">Father Name</label>
+                        <input type="text" class="em-input" placeholder="Father's full name"
+                               t-model="state.admissionForm.father_name"/>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Mother Name</label>
+                        <input type="text" class="em-input" placeholder="Mother's full name"
+                               t-model="state.admissionForm.mother_name"/>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Mobile Number</label>
+                        <input type="tel" class="em-input" placeholder="+91 98765 43210"
+                               t-model="state.admissionForm.parent_phone"/>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Email</label>
+                        <input type="email" class="em-input" placeholder="parent@email.com"
+                               t-model="state.admissionForm.parent_email"/>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Address Information -->
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Address Information</div>
+                    <div class="em-grid-2">
+                      <div class="em-field em-col-span-2" style="grid-column: span 2">
+                        <label class="em-label">Address</label>
+                        <textarea class="em-input emd-textarea" rows="3" placeholder="Street address"
+                                  t-model="state.admissionForm.address"/>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">City</label>
+                        <input type="text" class="em-input" placeholder="City"
+                               t-model="state.admissionForm.city"/>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">Country</label>
+                        <select class="em-select" t-model="state.admissionForm.country_id"
+                                t-on-change="onAdmissionCountryChange">
+                          <option value="">Select country</option>
+                          <t t-foreach="state.countries" t-as="country" t-key="country.id">
+                            <option t-att-value="country.id"><t t-out="country.name"/></option>
+                          </t>
+                        </select>
+                      </div>
+                      <div class="em-field">
+                        <label class="em-label">State</label>
+                        <select class="em-select" t-model="state.admissionForm.state_id"
+                                t-att-disabled="!state.admissionForm.country_id">
+                          <option value="">Select state</option>
+                          <t t-foreach="state.states" t-as="st" t-key="st.id">
+                            <option t-att-value="st.id"><t t-out="st.name"/></option>
+                          </t>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="emd-admission-actions">
+                    <button type="button" class="em-btn-back emd-btn-cancel" t-on-click="cancelAdmission">Cancel</button>
+                    <button type="submit" class="em-btn-primary" t-att-disabled="state.admissionSaving">
+                      <t t-if="state.admissionSaving">Saving…</t>
+                      <t t-else="">Save Admission</t>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </t>
+
+            <!-- ── Student Profile ──────────────────────────── -->
+            <t t-elif="state.studentsView === 'profile' and state.selectedStudent">
+              <div class="emd-profile-wrap">
+                <div class="emd-admission-header">
+                  <button class="emd-btn-back" t-on-click="backToRoster">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Students
+                  </button>
+                </div>
+
+                <div class="emd-profile-hero">
+                  <div class="emd-profile-hero-left">
+                    <t t-if="photoSrc(state.selectedStudent)">
+                      <img class="emd-profile-photo" t-att-src="photoSrc(state.selectedStudent)" alt="Student"/>
+                    </t>
+                    <t t-else="">
+                      <div t-attf-class="emd-student-avatar emd-profile-avatar {{ state.selectedStudent.gender === 'female' ? 'female' : '' }}">
+                        <t t-out="state.selectedStudent.initials"/>
+                      </div>
+                    </t>
+                    <div>
+                      <h2 class="emd-profile-name"><t t-out="state.selectedStudent.name"/></h2>
+                      <p class="emd-profile-meta">
+                        ID: <t t-out="state.selectedStudent.studentId"/> ·
+                        <t t-out="state.selectedStudent.className"/>
+                      </p>
+                      <span t-attf-class="emd-student-status {{ state.selectedStudent.status }}">
+                        <t t-out="state.selectedStudent.statusLabel"/>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="emd-profile-stats">
+                    <div class="emd-profile-stat">
+                      <span class="emd-profile-stat-value"><t t-out="state.selectedStudent.attendancePct"/>%</span>
+                      <span class="emd-profile-stat-label">Attendance</span>
+                    </div>
+                    <div class="emd-profile-stat">
+                      <span class="emd-profile-stat-value"><t t-out="state.selectedStudent.feeStatus"/></span>
+                      <span class="emd-profile-stat-label">Fee Status</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="emd-profile-grid">
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Student Information</div>
+                    <div class="emd-profile-fields">
+                      <div class="emd-profile-field"><span>Gender</span><strong t-out="formatGender(state.selectedStudent.gender)"/></div>
+                      <div class="emd-profile-field"><span>Date of Birth</span><strong t-out="state.selectedStudent.dob or '—'"/></div>
+                    </div>
+                  </div>
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Academic Information</div>
+                    <div class="emd-profile-fields">
+                      <div class="emd-profile-field"><span>Class</span><strong t-out="formatMany2one(state.selectedStudent.class_id)"/></div>
+                      <div class="emd-profile-field"><span>Section</span><strong t-out="formatMany2one(state.selectedStudent.section_id)"/></div>
+                      <div class="emd-profile-field"><span>Admission Date</span><strong t-out="state.selectedStudent.admission_date or '—'"/></div>
+                      <div class="emd-profile-field"><span>Roll Number</span><strong t-out="state.selectedStudent.rollNo or '—'"/></div>
+                    </div>
+                  </div>
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Parent Information</div>
+                    <div class="emd-profile-fields">
+                      <div class="emd-profile-field"><span>Father Name</span><strong t-out="state.selectedStudent.father_name or '—'"/></div>
+                      <div class="emd-profile-field"><span>Mother Name</span><strong t-out="state.selectedStudent.mother_name or '—'"/></div>
+                      <div class="emd-profile-field"><span>Mobile</span><strong t-out="state.selectedStudent.parent_phone or '—'"/></div>
+                      <div class="emd-profile-field"><span>Email</span><strong t-out="state.selectedStudent.parent_email or '—'"/></div>
+                    </div>
+                  </div>
+                  <div class="em-card emd-admission-card">
+                    <div class="em-section-label">Address Information</div>
+                    <div class="emd-profile-fields">
+                      <div class="emd-profile-field emd-profile-field-full"><span>Address</span><strong t-out="state.selectedStudent.address or '—'"/></div>
+                      <div class="emd-profile-field"><span>City</span><strong t-out="state.selectedStudent.city or '—'"/></div>
+                      <div class="emd-profile-field"><span>State</span><strong t-out="formatMany2one(state.selectedStudent.state_id)"/></div>
+                      <div class="emd-profile-field"><span>Country</span><strong t-out="formatMany2one(state.selectedStudent.country_id)"/></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </t>
+
+            <!-- ── Student Roster (unchanged) ───────────────── -->
+            <t t-else="">
             <div class="emd-page-bar">
               <div class="emd-page-bar-left">
                 <h2 class="emd-page-bar-title">
@@ -257,7 +524,7 @@
                     Classes
                   </button>
                 </div>
-                <button class="emd-btn-add">
+                <button class="emd-btn-add" t-on-click="openNewAdmission">
                   <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <t t-if="state.studentsSubTab === 'classes'">Add Class</t>
                   <t t-else="">New Admission</t>
@@ -328,7 +595,7 @@
                         <div t-attf-class="emd-student-attendance-dot {{ s.attendancePct &lt; 85 ? 'warn' : '' }}"/>
                         <t t-out="s.attendancePct"/>% Attendance
                       </div>
-                      <span class="emd-student-view">View Profile →</span>
+                      <span class="emd-student-view" t-on-click="() => openStudentProfile(s.id)">View Profile →</span>
                     </div>
                   </div>
                 </t>
@@ -385,6 +652,8 @@
                   </div>
                 </t>
               </div>
+            </t>
+
             </t>
 
           </t>

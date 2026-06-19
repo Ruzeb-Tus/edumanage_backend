@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Form view for creating a new student admission -->
+    <record id="view_edumanage_student_admission_form" model="ir.ui.view">
+        <field name="name">edumanage.student.admission.form</field>
+        <field name="model">edumanage.student</field>
+        <field name="arch" type="xml">
+            <form string="New Student Admission" create="true" edit="false">
+                <sheet class="emd-form-sheet">
+                    <!-- Student Information Section -->
+                    <group string="Student Information" col="2">
+                        <field name="name" placeholder="Student Name" required="1"/>
+                        <field name="photo" widget="image" class="oe_avatar"/> 
+                        <field name="gender" widget="selection"/> 
+                        <field name="birthday" string="Date of Birth" widget="date"/> 
+                    </group>
+                    <!-- Academic Information Section -->
+                    <group string="Academic Information" col="2">
+                        <field name="class_id" domain="[]" required="1" placeholder="Select Class"/> 
+                        <field name="section_id" domain="[]" required="1" placeholder="Select Section"/> 
+                        <field name="admission_date" widget="date" required="1"/> 
+                        <field name="roll_no" placeholder="Roll Number"/> 
+                    </group>
+                    <!-- Parent Information Section -->
+                    <group string="Parent Information" col="2">
+                        <field name="father_name" placeholder="Father Name"/> 
+                        <field name="mother_name" placeholder="Mother Name"/> 
+                        <field name="mobile_number" placeholder="Mobile Number"/> 
+                        <field name="email" placeholder="Email"/> 
+                    </group>
+                    <!-- Address Information Section -->
+                    <group string="Address Information" col="2">
+                        <field name="address" placeholder="Address"/> 
+                        <field name="city" placeholder="City"/> 
+                        <field name="state_id" placeholder="State"/> 
+                        <field name="country_id" placeholder="Country"/> 
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Save" type="object" name="action_create_student" class="btn-primary"/> 
+                    <button string="Cancel" type="action" name="action_cancel" class="btn-default"/> 
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the admission form in full page (no popup, no wizard) -->
+    <record id="action_edumanage_student_admission" model="ir.actions.act_window">
+        <field name="name">New Admission</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">edumanage.student</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_edumanage_student_admission_form"/>
+        <field name="target">current</field>
+        <field name="context">{"default_class_id": False, "default_section_id": False}</field>
+    </record>
+</odoo>

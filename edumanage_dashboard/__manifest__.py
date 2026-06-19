@@ -16,6 +16,7 @@
     'depends': ['base', 'web', 'mail', 'edumanage_setup'],
     'data': [
         'security/ir.model.access.csv',
+        'data/edumanage_data.xml',
         'views/edumanage_dashboard_views.xml',
     ],
     'assets': {
