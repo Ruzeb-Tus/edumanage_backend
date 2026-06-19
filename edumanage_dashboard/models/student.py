@@ -60,6 +60,81 @@ class EduManageClass(models.Model):
             })
         return res
 
+    @api.model
+    def get_class_form_data(self, class_id):
+        cls = self.browse(int(class_id))
+        if not cls.exists():
+            return False
+        students = self.env['edumanage.student'].search([('class_id', '=', cls.id)])
+        total_students = len(students)
+        active_students = len(students.filtered(lambda s: s.status == 'active'))
+        sections = [
+            {
+                'id': s.id,
+                'name': s.name,
+                'status': s.status,
+                'active': s.active,
+                '_new': False,
+                '_deleted': False,
+            }
+            for s in cls.with_context(active_test=False).section_ids
+        ]
+        return {
+            'id': cls.id,
+            'name': cls.name,
+            'code': cls.code or '',
+            'academic_year': cls.academic_year or '',
+            'class_teacher': cls.class_teacher or '',
+            'status': cls.status,
+            'sections': sections,
+            'stats': {
+                'total_students': total_students,
+                'active_students': active_students,
+                'total_sections': len([s for s in sections if s['active']]),
+            },
+        }
+
+    @api.model
+    def save_class_form(self, class_id, vals, sections):
+        allowed = {'name', 'code', 'academic_year', 'class_teacher', 'status'}
+        clean = {k: (v or False) for k, v in vals.items() if k in allowed}
+
+        if class_id:
+            cls = self.browse(int(class_id))
+            cls.write(clean)
+        else:
+            cls = self.create(clean)
+
+        Section = self.env['edumanage.section'].with_context(active_test=False)
+        for sec in (sections or []):
+            sid = sec.get('id')
+            is_new = sec.get('_new', False)
+            is_deleted = sec.get('_deleted', False)
+            is_archived = sec.get('_archived', False)
+            sec_name = (sec.get('name') or '').strip()
+
+            if sid and not is_new:
+                existing = Section.browse(int(sid))
+                if is_deleted:
+                    existing.unlink()
+                elif is_archived:
+                    existing.write({'status': 'archived', 'active': False})
+                else:
+                    existing.write({'name': sec_name, 'status': sec.get('status', 'active'), 'active': True})
+            elif not is_deleted and sec_name:
+                self.env['edumanage.section'].create({
+                    'name': sec_name,
+                    'class_id': cls.id,
+                    'status': 'active',
+                    'active': True,
+                })
+        return cls.id
+
+    @api.model
+    def archive_class_record(self, class_id):
+        self.browse(int(class_id)).write({'active': False, 'status': 'archived'})
+        return True
+
 class EduManageSection(models.Model):
     _name = 'edumanage.section'
     _description = 'EduManage Section'

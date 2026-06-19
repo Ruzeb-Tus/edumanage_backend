@@ -490,6 +490,161 @@
               </div>
             </t>
 
+            <!-- ── Class Form View ─────────────────────────── -->
+            <t t-elif="state.studentsView === 'class_form'">
+              <div class="emd-class-form-wrap">
+
+                <!-- Header -->
+                <div class="emd-class-form-header">
+                  <button class="emd-back-btn" t-on-click="cancelClassForm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px">
+                      <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Back to Classes
+                  </button>
+                  <div class="emd-class-form-title-block">
+                    <h2 class="emd-class-form-title">
+                      <t t-if="state.classForm.id"><t t-out="state.classForm.name || 'Class'"/></t>
+                      <t t-else="">New Class</t>
+                    </h2>
+                    <t t-if="state.classForm.id">
+                      <span t-attf-class="emd-class-status-chip {{ state.classForm.status }}">
+                        <t t-out="state.classForm.status === 'active' ? 'Active' : 'Archived'"/>
+                      </span>
+                    </t>
+                  </div>
+                  <div class="emd-class-form-actions">
+                    <t t-if="state.classForm.id">
+                      <button class="emd-cf-btn ghost" t-on-click="archiveClass">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 8v13H3V8"/><path d="M23 3H1l2 5h18l2-5z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        Archive
+                      </button>
+                    </t>
+                    <button class="emd-cf-btn primary" t-on-click="saveClassForm" t-att-disabled="state.classFormSaving">
+                      <t t-if="state.classFormSaving">Saving…</t>
+                      <t t-else="">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
+                        Save Class
+                      </t>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Form error banner -->
+                <t t-if="state.classFormErrors._form">
+                  <div class="emd-class-form-error"><t t-out="state.classFormErrors._form"/></div>
+                </t>
+
+                <!-- Stats band (edit mode only) -->
+                <t t-if="state.classForm.id">
+                  <div class="emd-class-stats-band">
+                    <div class="emd-class-stat-item">
+                      <span class="emd-class-stat-val"><t t-out="state.classForm.stats.total_students"/></span>
+                      <span class="emd-class-stat-lbl">Total Students</span>
+                    </div>
+                    <div class="emd-class-stat-sep"/>
+                    <div class="emd-class-stat-item">
+                      <span class="emd-class-stat-val"><t t-out="state.classForm.stats.total_sections"/></span>
+                      <span class="emd-class-stat-lbl">Total Sections</span>
+                    </div>
+                    <div class="emd-class-stat-sep"/>
+                    <div class="emd-class-stat-item">
+                      <span class="emd-class-stat-val"><t t-out="state.classForm.stats.active_students"/></span>
+                      <span class="emd-class-stat-lbl">Active Students</span>
+                    </div>
+                  </div>
+                </t>
+
+                <!-- Class Information Card -->
+                <div class="em-card emd-cf-card">
+                  <div class="em-section-label">Class Information</div>
+                  <div class="emd-cf-field-grid">
+
+                    <div t-attf-class="emd-cf-field {{ state.classFormErrors.name ? 'has-error' : '' }}">
+                      <label class="emd-cf-label">Class Name <span class="emd-cf-required">*</span></label>
+                      <input type="text" class="em-input emd-cf-input" placeholder="e.g. Class 10"
+                             t-model="state.classForm.name"/>
+                      <t t-if="state.classFormErrors.name">
+                        <span class="emd-cf-field-error"><t t-out="state.classFormErrors.name"/></span>
+                      </t>
+                    </div>
+
+                    <div class="emd-cf-field">
+                      <label class="emd-cf-label">Class Code</label>
+                      <input type="text" class="em-input emd-cf-input" placeholder="e.g. CLS-10"
+                             t-model="state.classForm.code"/>
+                    </div>
+
+                    <div class="emd-cf-field">
+                      <label class="emd-cf-label">Academic Year</label>
+                      <input type="text" class="em-input emd-cf-input" placeholder="e.g. 2024-25"
+                             t-model="state.classForm.academic_year"/>
+                    </div>
+
+                    <div class="emd-cf-field">
+                      <label class="emd-cf-label">Class Teacher</label>
+                      <input type="text" class="em-input emd-cf-input" placeholder="e.g. Mrs. Sharma"
+                             t-model="state.classForm.class_teacher"/>
+                    </div>
+
+                    <div class="emd-cf-field">
+                      <label class="emd-cf-label">Status</label>
+                      <select class="em-input emd-cf-input emd-cf-select" t-model="state.classForm.status">
+                        <option value="active">Active</option>
+                        <option value="archived">Archived</option>
+                      </select>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Sections Management Card -->
+                <div class="em-card emd-cf-card">
+                  <div class="em-section-label">Sections</div>
+
+                  <div class="emd-cf-section-list">
+                    <t t-if="visibleFormSections.length === 0">
+                      <div class="emd-cf-section-empty">No sections yet — add one below.</div>
+                    </t>
+                    <t t-foreach="visibleFormSections" t-as="sec" t-key="sec._key">
+                      <div t-attf-class="emd-cf-section-row {{ sec._archived ? 'is-archived' : '' }}">
+                        <div class="emd-cf-section-avatar"><t t-out="sec.name ? sec.name[0].toUpperCase() : '?'"/></div>
+                        <div class="emd-cf-section-info">
+                          <span class="emd-cf-section-name">Section <t t-out="sec.name"/></span>
+                          <span t-attf-class="emd-cf-section-badge {{ sec._archived ? 'archived' : 'active' }}">
+                            <t t-if="sec._archived">Archived</t><t t-else="">Active</t>
+                          </span>
+                          <t t-if="sec._new"><span class="emd-cf-section-badge new">New</span></t>
+                        </div>
+                        <div class="emd-cf-section-actions">
+                          <button class="emd-cf-sec-btn info" t-att-disabled="!sec.id" t-on-click="() => viewStudentsForSection(sec)">View Students</button>
+                          <t t-if="!sec._archived">
+                            <button class="emd-cf-sec-btn warn" t-on-click="() => archiveSectionItem(sec._key)">Archive</button>
+                          </t>
+                          <t t-else="">
+                            <button class="emd-cf-sec-btn restore" t-on-click="() => restoreSection(sec._key)">Restore</button>
+                          </t>
+                          <button class="emd-cf-sec-btn danger" t-on-click="() => removeSectionItem(sec._key)">Remove</button>
+                        </div>
+                      </div>
+                    </t>
+                  </div>
+
+                  <div class="emd-cf-add-section-row">
+                    <input type="text" class="em-input emd-cf-section-input"
+                           placeholder="Section name (e.g. A, B, Science)"
+                           t-model="state.newSectionName"
+                           t-on-keydown="onSectionKeydown"/>
+                    <button class="emd-cf-add-sec-btn" t-on-click="addSection">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Add Section
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </t>
+
             <!-- ── Student Roster (unchanged) ───────────────── -->
             <t t-else="">
             <div class="emd-page-bar">
@@ -524,7 +679,7 @@
                     Classes
                   </button>
                 </div>
-                <button class="emd-btn-add" t-on-click="openNewAdmission">
+                <button class="emd-btn-add" t-on-click="onPageBarAdd">
                   <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <t t-if="state.studentsSubTab === 'classes'">Add Class</t>
                   <t t-else="">New Admission</t>
@@ -619,7 +774,7 @@
             <t t-if="state.studentsSubTab === 'classes'">
               <div class="emd-classes-grid">
                 <t t-foreach="classesData" t-as="c" t-key="c.id">
-                  <div class="emd-class-card">
+                  <div class="emd-class-card" t-on-click="() => openClassCard(c.id)" style="cursor:pointer">
                     <div class="emd-class-header">
                       <div class="emd-class-icon">
                         <svg viewBox="0 0 24 24">

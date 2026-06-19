@@ -94,6 +94,22 @@ function todayISO() {
   return new Date().toISOString().split("T")[0];
 }
 
+let _sectionKeyCounter = 0;
+function makeSectionKey() { return `sec_${++_sectionKeyCounter}`; }
+
+function emptyClassForm() {
+  return {
+    id: null,
+    name: '',
+    code: '',
+    academic_year: '',
+    class_teacher: '',
+    status: 'active',
+    sections: [],
+    stats: { total_students: 0, active_students: 0, total_sections: 0 },
+  };
+}
+
 function emptyAdmissionForm() {
   return {
     name: "",
@@ -157,6 +173,9 @@ export class EduManageDashboard extends Component {
     const initialNav = router.current.activeNav || "dashboard";
     const initialStudentsView = router.current.studentsView || "roster";
     const initialStudentId = router.current.studentId ? parseInt(router.current.studentId, 10) : null;
+    const initialStudentsSubTab = router.current.studentsSubTab || "roster";
+    const initialFilterClassId = router.current.filterClassId ? parseInt(router.current.filterClassId, 10) : null;
+    const initialFilterSectionId = router.current.filterSectionId ? parseInt(router.current.filterSectionId, 10) : null;
 
     this.state = useState({
       sidebarCollapsed: false,
@@ -172,7 +191,7 @@ export class EduManageDashboard extends Component {
       dateStr:  date.dateStr,
       dateCaps: date.dateCaps,
       // Students tab state
-      studentsSubTab: "roster",
+      studentsSubTab: initialStudentsSubTab,
       studentsView: initialStudentsView,
       selectedStudentId: initialStudentId,
       selectedStudent: null,
@@ -186,6 +205,13 @@ export class EduManageDashboard extends Component {
       admissionForm: emptyAdmissionForm(),
       admissionErrors: {},
       admissionSaving: false,
+      filterClassId: initialFilterClassId,
+      filterSectionId: initialFilterSectionId,
+      // Class form state
+      classForm: emptyClassForm(),
+      classFormErrors: {},
+      classFormSaving: false,
+      newSectionName: '',
     });
 
     this.navItems     = NAV_ITEMS;
@@ -215,6 +241,17 @@ export class EduManageDashboard extends Component {
     this.onPhotoSelect      = this.onPhotoSelect.bind(this);
     this.removePhoto        = this.removePhoto.bind(this);
 
+    // Class form bindings
+    this.onPageBarAdd       = this.onPageBarAdd.bind(this);
+    this.openAddClass       = this.openAddClass.bind(this);
+    this.openClassCard      = this.openClassCard.bind(this);
+    this.cancelClassForm    = this.cancelClassForm.bind(this);
+    this.saveClassForm      = this.saveClassForm.bind(this);
+    this.archiveClass       = this.archiveClass.bind(this);
+    this.addSection         = this.addSection.bind(this);
+    this.onSectionKeydown   = this.onSectionKeydown.bind(this);
+    this.viewStudentsForSection = this.viewStudentsForSection.bind(this);
+
     // Sync activeNav from router state on popstate/ROUTE_CHANGE
     const onRoute = () => {
       const activeNav = router.current.activeNav || "dashboard";
@@ -231,6 +268,15 @@ export class EduManageDashboard extends Component {
         if (studentId && this.state.studentsView === "profile") {
           this._loadStudentProfile(studentId);
         }
+      }
+      const filterClassId = router.current.filterClassId ? parseInt(router.current.filterClassId, 10) : null;
+      const filterSectionId = router.current.filterSectionId ? parseInt(router.current.filterSectionId, 10) : null;
+      this.state.filterClassId = filterClassId;
+      this.state.filterSectionId = filterSectionId;
+
+      const studentsSubTab = router.current.studentsSubTab || "roster";
+      if (this.state.studentsSubTab !== studentsSubTab) {
+        this.state.studentsSubTab = studentsSubTab;
       }
     };
     routerBus.addEventListener("ROUTE_CHANGE", onRoute);
@@ -355,7 +401,14 @@ export class EduManageDashboard extends Component {
       this.state.selectedStudentId = null;
       this.state.selectedStudent = null;
     }
-    router.pushState({ activeNav: id, studentsView: id === "students" ? this.state.studentsView : "roster" });
+    this.state.filterClassId = null;
+    this.state.filterSectionId = null;
+    router.pushState({
+      activeNav: id,
+      studentsView: id === "students" ? this.state.studentsView : "roster",
+      filterClassId: undefined,
+      filterSectionId: undefined,
+    });
   }
 
   get activeTitle() {
@@ -374,6 +427,12 @@ export class EduManageDashboard extends Component {
     if (filter === "active")   list = list.filter(s => s.status === "active");
     if (filter === "inactive") list = list.filter(s => s.status === "inactive");
     if (filter === "feeDue")   list = list.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue");
+    if (this.state.filterClassId) {
+      list = list.filter(s => s.class_id && s.class_id[0] === this.state.filterClassId);
+    }
+    if (this.state.filterSectionId) {
+      list = list.filter(s => s.section_id && s.section_id[0] === this.state.filterSectionId);
+    }
     const q = (this.state.studentSearch || "").toLowerCase().trim();
     if (q) {
       list = list.filter(s =>
@@ -394,15 +453,21 @@ export class EduManageDashboard extends Component {
   }
 
   getStudentFilters() {
-    const students = this.state.students;
+    let list = this.state.students;
+    if (this.state.filterClassId) {
+      list = list.filter(s => s.class_id && s.class_id[0] === this.state.filterClassId);
+    }
+    if (this.state.filterSectionId) {
+      list = list.filter(s => s.section_id && s.section_id[0] === this.state.filterSectionId);
+    }
     return [
-      { id: "all", label: "All Students", count: students.length },
-      { id: "active", label: "Active", count: students.filter(s => s.status === "active").length },
-      { id: "inactive", label: "Inactive", count: students.filter(s => s.status === "inactive").length },
+      { id: "all", label: "All Students", count: list.length },
+      { id: "active", label: "Active", count: list.filter(s => s.status === "active").length },
+      { id: "inactive", label: "Inactive", count: list.filter(s => s.status === "inactive").length },
       {
         id: "feeDue",
         label: "Fee Due",
-        count: students.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue").length,
+        count: list.filter(s => s.feeStatus === "Due" || s.feeStatus === "Overdue").length,
       },
     ];
   }
@@ -412,6 +477,8 @@ export class EduManageDashboard extends Component {
       activeNav: "students",
       studentsView: this.state.studentsView,
       ...(this.state.selectedStudentId ? { studentId: this.state.selectedStudentId } : {}),
+      ...(this.state.filterClassId ? { filterClassId: this.state.filterClassId } : {}),
+      ...(this.state.filterSectionId ? { filterSectionId: this.state.filterSectionId } : {}),
       ...extra,
     });
   }
@@ -437,7 +504,12 @@ export class EduManageDashboard extends Component {
     this.state.selectedStudentId = null;
     this.state.selectedStudent = null;
     this.state.admissionErrors = {};
-    router.pushState({ activeNav: "students", studentsView: "roster" });
+    router.pushState({
+      activeNav: "students",
+      studentsView: "roster",
+      ...(this.state.filterClassId ? { filterClassId: this.state.filterClassId } : {}),
+      ...(this.state.filterSectionId ? { filterSectionId: this.state.filterSectionId } : {}),
+    });
   }
 
   async openStudentProfile(studentId) {
@@ -470,6 +542,152 @@ export class EduManageDashboard extends Component {
   removePhoto() {
     this.state.admissionForm.photoPreview = null;
     this.state.admissionForm.photoB64 = null;
+  }
+
+  // ── Class Form ────────────────────────────────────────────────────────────
+
+  get visibleFormSections() {
+    return (this.state.classForm.sections || []).filter(s => !s._deleted);
+  }
+
+  onPageBarAdd() {
+    if (this.state.studentsSubTab === 'classes') {
+      this.openAddClass();
+    } else {
+      this.openNewAdmission();
+    }
+  }
+
+  openAddClass() {
+    this.state.classForm = emptyClassForm();
+    this.state.classFormErrors = {};
+    this.state.classFormSaving = false;
+    this.state.newSectionName = '';
+    this.state.studentsView = 'class_form';
+  }
+
+  async openClassCard(classId) {
+    this.state.classFormErrors = {};
+    this.state.classFormSaving = false;
+    this.state.newSectionName = '';
+    this.state.studentsView = 'class_form';
+    try {
+      const data = await this.orm.call('edumanage.class', 'get_class_form_data', [classId]);
+      if (data) {
+        data.sections = (data.sections || []).map(s => ({
+          ...s,
+          _key: makeSectionKey(),
+          _archived: !s.active,
+          _new: false,
+          _deleted: false,
+        }));
+        this.state.classForm = data;
+      }
+    } catch (e) {
+      console.error('openClassCard error', e);
+    }
+  }
+
+  cancelClassForm() {
+    this.state.studentsView = 'roster';
+    this.state.classForm = emptyClassForm();
+    this.state.classFormErrors = {};
+    this.state.filterClassId = null;
+    this.state.filterSectionId = null;
+  }
+
+  _validateClassForm() {
+    const errors = {};
+    if (!this.state.classForm.name?.trim()) errors.name = 'Class name is required';
+    this.state.classFormErrors = errors;
+    return Object.keys(errors).length === 0;
+  }
+
+  async saveClassForm() {
+    if (!this._validateClassForm() || this.state.classFormSaving) return;
+    this.state.classFormSaving = true;
+    const f = this.state.classForm;
+    const vals = {
+      name: f.name.trim(),
+      code: f.code?.trim() || '',
+      academic_year: f.academic_year?.trim() || '',
+      class_teacher: f.class_teacher?.trim() || '',
+      status: f.status,
+    };
+    const sections = (f.sections || []).map(s => ({
+      id: s.id || null,
+      name: s.name,
+      status: s.status,
+      _new: s._new || false,
+      _deleted: s._deleted || false,
+      _archived: s._archived || false,
+    }));
+    try {
+      const newId = await this.orm.call('edumanage.class', 'save_class_form', [f.id, vals, sections]);
+      this.state.classFormSaving = false;
+      // Reload the form with fresh data
+      await this.openClassCard(newId);
+      // Refresh kanban data in background
+      this._loadClassesData();
+    } catch (e) {
+      console.error('saveClassForm error', e);
+      this.state.classFormSaving = false;
+      this.state.classFormErrors._form = 'Save failed. Please try again.';
+    }
+  }
+
+  async archiveClass() {
+    if (!this.state.classForm.id) return;
+    try {
+      await this.orm.call('edumanage.class', 'archive_class_record', [this.state.classForm.id]);
+      this.cancelClassForm();
+      this._loadClassesData();
+    } catch (e) {
+      console.error('archiveClass error', e);
+    }
+  }
+
+  async _loadClassesData() {
+    try {
+      const data = await this.orm.call('edumanage.class', 'get_classes_data', []);
+      this.classesData = data;
+    } catch (e) {
+      console.error('_loadClassesData error', e);
+    }
+  }
+
+  addSection() {
+    const name = (this.state.newSectionName || '').trim();
+    if (!name) return;
+    this.state.classForm.sections = [
+      ...(this.state.classForm.sections || []),
+      { id: null, name, status: 'active', active: true, _new: true, _deleted: false, _archived: false, _key: makeSectionKey() },
+    ];
+    this.state.newSectionName = '';
+  }
+
+  onSectionKeydown(ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); this.addSection(); }
+  }
+
+  removeSectionItem(key) {
+    const sec = this.state.classForm.sections.find(s => s._key === key);
+    if (!sec) return;
+    if (sec._new) {
+      this.state.classForm.sections = this.state.classForm.sections.filter(s => s._key !== key);
+    } else {
+      sec._deleted = true;
+    }
+  }
+
+  archiveSectionItem(key) {
+    const sec = this.state.classForm.sections.find(s => s._key === key);
+    if (sec) { sec._archived = true; sec.status = 'archived'; }
+  }
+
+  restoreSection(key) {
+    const sec = this.state.classForm.sections.find(s => s._key === key);
+    if (sec) { sec._archived = false; sec.status = 'active'; }
   }
 
   _validateAdmission() {
@@ -534,7 +752,38 @@ export class EduManageDashboard extends Component {
     return gender.charAt(0).toUpperCase() + gender.slice(1);
   }
 
-  setStudentsSubTab(tab) { this.state.studentsSubTab = tab; }
+  setStudentsSubTab(tab) {
+    this.state.studentsSubTab = tab;
+    if (tab === "classes") {
+      this.state.filterClassId = null;
+      this.state.filterSectionId = null;
+    }
+    router.pushState({
+      activeNav: "students",
+      studentsView: this.state.studentsView,
+      studentsSubTab: tab,
+      ...(tab === "classes" ? { filterClassId: undefined, filterSectionId: undefined } : {
+        filterClassId: this.state.filterClassId || undefined,
+        filterSectionId: this.state.filterSectionId || undefined,
+      })
+    });
+  }
+
+  viewStudentsForSection(sec) {
+    if (!sec.id) return;
+    this.state.activeNav = "students";
+    this.state.studentsSubTab = "roster";
+    this.state.studentsView = "roster";
+    this.state.filterClassId = this.state.classForm.id;
+    this.state.filterSectionId = sec.id;
+    router.pushState({
+      activeNav: "students",
+      studentsView: "roster",
+      studentsSubTab: "roster",
+      filterClassId: this.state.classForm.id,
+      filterSectionId: sec.id,
+    });
+  }
   setStudentFilter(filterId) { this.state.studentFilter = filterId; }
   onStudentSearch() { /* reactive via t-model */ }
 }
