@@ -132,6 +132,15 @@ function emptyAdmissionForm() {
   };
 }
 
+function emptyCollectForm() {
+  return {
+    amount_collected: "",
+    payment_method: "upi",
+    collection_date: todayISO(),
+    remarks: "",
+  };
+}
+
 function emptyFeeStructureForm() {
   return {
     class_id: "",
@@ -235,6 +244,14 @@ export class EduManageDashboard extends Component {
       feeStructureForm: emptyFeeStructureForm(),
       feeStructureSaving: false,
       feeStructureErrors: {},
+      // Fee collection state
+      collectFeeId: null,
+      collectFeeData: null,
+      collectForm: emptyCollectForm(),
+      collectErrors: {},
+      collectSaving: false,
+      currentReceipt: null,
+      feeCollectSearch: "",
     });
 
     this.navItems     = NAV_ITEMS;
@@ -284,6 +301,14 @@ export class EduManageDashboard extends Component {
     this.setFeeFilter             = this.setFeeFilter.bind(this);
     this.revokeFeeStructure       = this.revokeFeeStructure.bind(this);
     this.formatCurrency           = formatCurrency;
+    // Collection workflow bindings
+    this.openCollectPick          = this.openCollectPick.bind(this);
+    this.cancelCollectPick        = this.cancelCollectPick.bind(this);
+    this.openCollectFee           = this.openCollectFee.bind(this);
+    this.cancelCollect            = this.cancelCollect.bind(this);
+    this.submitCollectFee         = this.submitCollectFee.bind(this);
+    this.backFromReceipt          = this.backFromReceipt.bind(this);
+    this.printReceipt             = this.printReceipt.bind(this);
 
     // Sync activeNav from router state on popstate/ROUTE_CHANGE
     const onRoute = () => {
@@ -943,6 +968,108 @@ export class EduManageDashboard extends Component {
     } catch (err) {
       console.error("Failed to update fee structure status:", err);
     }
+  }
+
+  // ── Fee Collection Workflow ───────────────────────────────────────────────
+
+  get filteredCollectFees() {
+    const fees = (this.state.studentFees || []).filter(f => f.status !== "paid" && f.remaining_due > 0);
+    const q = (this.state.feeCollectSearch || "").trim().toLowerCase();
+    if (!q) return fees;
+    return fees.filter(f => {
+      const name = (f.student_id ? (Array.isArray(f.student_id) ? f.student_id[1] : String(f.student_id)) : "").toLowerCase();
+      return name.includes(q);
+    });
+  }
+
+  openCollectPick() {
+    this.state.feeCollectSearch = "";
+    this.state.feesView = "collect_pick";
+    // Reload to make sure we have latest data
+    this._loadFeesData();
+  }
+
+  cancelCollectPick() {
+    this.state.feesView = "list";
+    this.state.feeCollectSearch = "";
+  }
+
+  async openCollectFee(feeId) {
+    // Remember where we came from so Cancel returns there
+    this.state._collectOrigin  = this.state.feesView === "collect_pick" ? "collect_pick" : "list";
+    this.state.collectFeeId    = feeId;
+    this.state.collectFeeData  = null;
+    this.state.collectForm     = emptyCollectForm();
+    this.state.collectErrors   = {};
+    this.state.collectSaving   = false;
+    this.state.feesView        = "collect";
+    try {
+      const data = await this.orm.call("edumanage.student.fee", "get_student_fee_detail", [feeId]);
+      if (data) {
+        this.state.collectFeeData = data;
+        // Pre-fill max collectible amount
+        this.state.collectForm.amount_collected = String(data.remaining_due);
+      }
+    } catch (err) {
+      console.error("openCollectFee error", err);
+    }
+  }
+
+  cancelCollect() {
+    this.state.feesView       = this.state._collectOrigin || "list";
+    this.state._collectOrigin = null;
+    this.state.collectFeeData = null;
+    this.state.collectErrors  = {};
+  }
+
+  _validateCollect() {
+    const f      = this.state.collectForm;
+    const data   = this.state.collectFeeData;
+    const errors = {};
+    const amount = parseFloat(f.amount_collected);
+    if (!f.amount_collected || isNaN(amount) || amount <= 0) {
+      errors.amount_collected = "Enter a valid positive amount.";
+    } else if (data && amount > data.remaining_due + 0.001) {
+      errors.amount_collected = `Amount cannot exceed remaining due ₹${formatCurrency(data.remaining_due)}.`;
+    }
+    if (!f.collection_date) errors.collection_date = "Payment date is required.";
+    if (!f.payment_method)  errors.payment_method  = "Select a payment method.";
+    this.state.collectErrors = errors;
+    return Object.keys(errors).length === 0;
+  }
+
+  async submitCollectFee() {
+    if (!this._validateCollect() || this.state.collectSaving) return;
+    this.state.collectSaving = true;
+    const f = this.state.collectForm;
+    const vals = {
+      amount_collected: parseFloat(f.amount_collected),
+      payment_method:   f.payment_method,
+      collection_date:  f.collection_date,
+      remarks:          f.remarks || "",
+    };
+    try {
+      const receipt = await this.orm.call(
+        "edumanage.student.fee", "collect_and_receipt", [this.state.collectFeeId, vals]
+      );
+      this.state.currentReceipt = receipt;
+      this.state.feesView       = "receipt";
+      this.state.collectSaving  = false;
+      await this._loadFeesData();
+    } catch (err) {
+      this.state.collectSaving = false;
+      this.state.collectErrors = { _form: err.message || err.data?.message || "Payment failed. Please try again." };
+    }
+  }
+
+  backFromReceipt() {
+    this.state.feesView      = "list";
+    this.state.currentReceipt = null;
+    this.state.activeFeesSubTab = "pending";
+  }
+
+  printReceipt() {
+    window.print();
   }
 }
 

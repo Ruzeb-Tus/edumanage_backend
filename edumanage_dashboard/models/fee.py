@@ -182,6 +182,95 @@ class EduManageStudentFee(models.Model):
             }
         }
 
+    @api.model
+    def get_student_fee_detail(self, fee_id):
+        fee = self.browse(int(fee_id))
+        if not fee.exists():
+            return False
+        pm_labels = dict(self.env['edumanage.fee.payment']._fields['payment_method'].selection)
+        payments = [{
+            'name': p.name,
+            'collection_date': p.collection_date.strftime('%d %b %Y') if p.collection_date else '',
+            'amount_collected': p.amount_collected,
+            'payment_method': pm_labels.get(p.payment_method, p.payment_method),
+            'remarks': p.remarks or '',
+            'collected_by': p.collected_by or '',
+        } for p in fee.payment_ids.sorted('collection_date')]
+        return {
+            'id': fee.id,
+            'name': fee.name,
+            'student_name': fee.student_id.name,
+            'student_id_code': fee.student_id.student_id_code or '',
+            'roll_no': fee.student_id.roll_no or '',
+            'class_name': fee.class_id.name if fee.class_id else '',
+            'section_name': fee.section_id.name if fee.section_id else '',
+            'academic_year': fee.academic_year or '',
+            'fee_month': fee.fee_month or '',
+            'total_amount': fee.total_amount,
+            'amount_paid': fee.amount_paid,
+            'remaining_due': fee.remaining_due,
+            'status': fee.status,
+            'due_date': fee.due_date.strftime('%d %b %Y') if fee.due_date else '',
+            'payments': payments,
+        }
+
+    @api.model
+    def collect_and_receipt(self, fee_id, vals):
+        fee = self.browse(int(fee_id))
+        if not fee.exists():
+            raise ValidationError(_("Fee record not found."))
+
+        amount = float(vals.get('amount_collected', 0))
+        if amount <= 0:
+            raise ValidationError(_("Payment amount must be positive."))
+
+        remaining = fee.total_amount - fee.amount_paid
+        if amount > remaining + 0.001:
+            raise ValidationError(
+                _("Payment amount (₹%.2f) exceeds remaining due (₹%.2f).") % (amount, remaining)
+            )
+
+        payment = self.env['edumanage.fee.payment'].create({
+            'student_fee_id': fee.id,
+            'amount_collected': amount,
+            'payment_method': vals.get('payment_method', 'cash'),
+            'collection_date': vals.get('collection_date') or fields.Date.today().strftime('%Y-%m-%d'),
+            'remarks': vals.get('remarks', ''),
+        })
+
+        # Reload computed fields
+        fee.invalidate_recordset(['amount_paid', 'remaining_due', 'status'])
+        pm_labels = dict(payment._fields['payment_method'].selection)
+        status_labels = {'pending': 'Pending', 'partial': 'Partial', 'paid': 'Paid', 'overdue': 'Overdue'}
+        company = self.env.company
+
+        return {
+            'receipt_number': payment.name,
+            'student_name': fee.student_id.name,
+            'student_id_code': fee.student_id.student_id_code or '',
+            'roll_no': fee.student_id.roll_no or '',
+            'class_name': fee.class_id.name if fee.class_id else '',
+            'section_name': fee.section_id.name if fee.section_id else '',
+            'academic_year': fee.academic_year or '',
+            'fee_month': fee.fee_month or '',
+            'collection_date': payment.collection_date.strftime('%d %b %Y') if payment.collection_date else '',
+            'payment_method': pm_labels.get(payment.payment_method, payment.payment_method),
+            'amount_collected': payment.amount_collected,
+            'total_amount': fee.total_amount,
+            'prev_amount_paid': fee.amount_paid - payment.amount_collected,
+            'amount_paid': fee.amount_paid,
+            'remaining_due': fee.remaining_due,
+            'status': fee.status,
+            'status_label': status_labels.get(fee.status, fee.status.title()),
+            'remarks': payment.remarks or '',
+            'collected_by': payment.collected_by or '',
+            'institution_name': company.name or 'EduManage',
+            'institution_street': company.street or '',
+            'institution_city': company.city or '',
+            'institution_phone': company.phone or '',
+            'institution_email': company.email or '',
+        }
+
 
 class EduManageFeePayment(models.Model):
     _name = 'edumanage.fee.payment'

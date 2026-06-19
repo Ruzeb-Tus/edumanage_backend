@@ -870,6 +870,12 @@
                       Fee Structures
                     </button>
                   </div>
+                  <t t-if="state.activeFeesSubTab === 'pending'">
+                    <button class="emd-btn-add" t-on-click="openCollectPick">
+                      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                      Collect Fee
+                    </button>
+                  </t>
                   <t t-if="state.activeFeesSubTab === 'structures'">
                     <button class="emd-btn-add" t-on-click="openCreateFeeStructure">
                       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -992,6 +998,13 @@
                           <t t-else="">Pending</t>
                         </span>
                       </div>
+                      <!-- Collect action -->
+                      <t t-if="fee.status !== 'paid'">
+                        <button class="emf-collect-btn" t-on-click="() => openCollectFee(fee.id)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                          Collect
+                        </button>
+                      </t>
                     </div>
                   </t>
                 </div>
@@ -1075,6 +1088,403 @@
                 </div>
               </t>
 
+            </t>
+
+            <!-- ── Collect Fee Picker ─────────────────────────── -->
+            <t t-if="state.feesView === 'collect_pick'">
+              <div class="emf-form-wrap">
+
+                <!-- Header -->
+                <div class="emd-class-form-header">
+                  <button class="emd-back-btn" t-on-click="cancelCollectPick">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back
+                  </button>
+                  <div class="emd-class-form-title-block">
+                    <h2 class="emd-class-form-title">Collect Fee Payment</h2>
+                    <span class="emd-page-bar-count" style="margin-left:8px">
+                      <t t-out="filteredCollectFees.length"/> outstanding
+                    </span>
+                  </div>
+                  <!-- Search box -->
+                  <div class="emf-pick-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px;color:var(--emd-text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Search student name…"
+                           class="emf-pick-search-input"
+                           t-model="state.feeCollectSearch"/>
+                  </div>
+                </div>
+
+                <!-- Outstanding fee list -->
+                <t t-if="filteredCollectFees.length === 0">
+                  <div class="emf-empty" style="margin-top:20px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    <div class="emf-empty-title">No outstanding fees found</div>
+                    <div class="emf-empty-desc">
+                      <t t-if="state.feeCollectSearch">No students match "<t t-out="state.feeCollectSearch"/>".</t>
+                      <t t-else="">
+                        No fee assignments with pending balance exist yet.<br/>
+                        Go to <strong>Fee Structures</strong> → Create a structure → <strong>Confirm &amp; Assign</strong> to auto-generate student fee records.
+                      </t>
+                    </div>
+                    <t t-if="!state.feeCollectSearch">
+                      <button class="emd-cf-btn primary" style="margin-top:8px" t-on-click="() => { cancelCollectPick(); setFeesSubTab('structures'); }">
+                        Go to Fee Structures
+                      </button>
+                    </t>
+                  </div>
+                </t>
+
+                <div class="emf-pick-list">
+                  <t t-foreach="filteredCollectFees" t-as="fee" t-key="fee.id">
+                    <div class="emf-pick-row">
+                      <!-- Avatar -->
+                      <div t-attf-class="emf-fee-avatar {{ fee.status }}" style="width:42px;height:42px;border-radius:10px;font-size:14px">
+                        <t t-out="formatMany2one(fee.student_id) ? formatMany2one(fee.student_id).split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) : '?'"/>
+                      </div>
+                      <!-- Info -->
+                      <div class="emf-pick-info">
+                        <div class="emf-pick-name"><t t-out="formatMany2one(fee.student_id)"/></div>
+                        <div class="emf-pick-meta">
+                          <t t-if="fee.class_id">Class <t t-out="formatMany2one(fee.class_id)"/></t>
+                          <t t-if="fee.fee_month"> · <t t-out="fee.fee_month"/></t>
+                          <t t-if="fee.academic_year"> · <t t-out="fee.academic_year"/></t>
+                        </div>
+                      </div>
+                      <!-- Amounts -->
+                      <div class="emf-pick-amounts">
+                        <div class="emf-pick-due">₹<t t-out="formatCurrency(fee.remaining_due)"/> due</div>
+                        <div class="emf-pick-total">of ₹<t t-out="formatCurrency(fee.total_amount)"/></div>
+                      </div>
+                      <!-- Status -->
+                      <span t-attf-class="emf-status-badge {{ fee.status }}">
+                        <t t-if="fee.status === 'overdue'">Overdue</t>
+                        <t t-elif="fee.status === 'partial'">Partial</t>
+                        <t t-else="">Pending</t>
+                      </span>
+                      <!-- Collect button -->
+                      <button class="emf-collect-btn" t-on-click="() => openCollectFee(fee.id)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg>
+                        Collect
+                      </button>
+                    </div>
+                  </t>
+                </div>
+
+              </div>
+            </t>
+
+            <!-- ── Collect Fee Payment Form ───────────────────── -->
+            <t t-if="state.feesView === 'collect'">
+              <div class="emf-form-wrap">
+
+                <!-- Header -->
+                <div class="emd-class-form-header">
+                  <button class="emd-back-btn" t-on-click="cancelCollect">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Fees
+                  </button>
+                  <div class="emd-class-form-title-block">
+                    <h2 class="emd-class-form-title">Collect Fee Payment</h2>
+                  </div>
+                  <div class="emd-class-form-actions">
+                    <button class="emd-cf-btn ghost" t-on-click="cancelCollect">Cancel</button>
+                    <button class="emd-cf-btn primary" t-on-click="submitCollectFee" t-att-disabled="state.collectSaving">
+                      <t t-if="state.collectSaving">Processing…</t>
+                      <t t-else="">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
+                        Confirm Payment
+                      </t>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Form error -->
+                <t t-if="state.collectErrors._form">
+                  <div class="emd-class-form-error"><t t-out="state.collectErrors._form"/></div>
+                </t>
+
+                <!-- Loading state -->
+                <t t-if="!state.collectFeeData">
+                  <div class="emf-loading">Loading fee details…</div>
+                </t>
+
+                <t t-if="state.collectFeeData">
+                  <!-- Student info card -->
+                  <div class="em-card emd-cf-card">
+                    <div class="em-section-label">Student Information</div>
+                    <div class="emf-collect-student-row">
+                      <div class="emf-collect-avatar">
+                        <t t-out="state.collectFeeData.student_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2)"/>
+                      </div>
+                      <div class="emf-collect-student-info">
+                        <div class="emf-collect-student-name"><t t-out="state.collectFeeData.student_name"/></div>
+                        <div class="emf-collect-student-meta">
+                          <t t-if="state.collectFeeData.class_name">Class <t t-out="state.collectFeeData.class_name"/></t>
+                          <t t-if="state.collectFeeData.section_name"> · Section <t t-out="state.collectFeeData.section_name"/></t>
+                          <t t-if="state.collectFeeData.fee_month"> · <t t-out="state.collectFeeData.fee_month"/></t>
+                          <t t-if="state.collectFeeData.academic_year"> · <t t-out="state.collectFeeData.academic_year"/></t>
+                        </div>
+                        <t t-if="state.collectFeeData.student_id_code">
+                          <div class="emf-collect-student-id">ID: <t t-out="state.collectFeeData.student_id_code"/></div>
+                        </t>
+                      </div>
+                    </div>
+                    <!-- Fee summary band -->
+                    <div class="emf-collect-summary">
+                      <div class="emf-collect-sum-item">
+                        <div class="emf-collect-sum-val">₹<t t-out="formatCurrency(state.collectFeeData.total_amount)"/></div>
+                        <div class="emf-collect-sum-lbl">Total Fee</div>
+                      </div>
+                      <div class="emf-collect-sum-sep"/>
+                      <div class="emf-collect-sum-item">
+                        <div class="emf-collect-sum-val green">₹<t t-out="formatCurrency(state.collectFeeData.amount_paid)"/></div>
+                        <div class="emf-collect-sum-lbl">Already Paid</div>
+                      </div>
+                      <div class="emf-collect-sum-sep"/>
+                      <div class="emf-collect-sum-item">
+                        <div class="emf-collect-sum-val amber">₹<t t-out="formatCurrency(state.collectFeeData.remaining_due)"/></div>
+                        <div class="emf-collect-sum-lbl">Remaining Due</div>
+                      </div>
+                      <div class="emf-collect-sum-sep"/>
+                      <div class="emf-collect-sum-item">
+                        <span t-attf-class="emf-status-badge {{ state.collectFeeData.status }}">
+                          <t t-out="state.collectFeeData.status.charAt(0).toUpperCase() + state.collectFeeData.status.slice(1)"/>
+                        </span>
+                        <div class="emf-collect-sum-lbl">Status</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Payment details card -->
+                  <div class="em-card emd-cf-card">
+                    <div class="em-section-label">Payment Details</div>
+                    <div class="emd-cf-field-grid">
+
+                      <!-- Amount -->
+                      <div t-attf-class="emd-cf-field {{ state.collectErrors.amount_collected ? 'has-error' : '' }}">
+                        <label class="emd-cf-label">
+                          Amount to Collect (₹) <span class="emd-cf-required">*</span>
+                          <span class="emf-max-hint"> max ₹<t t-out="formatCurrency(state.collectFeeData.remaining_due)"/></span>
+                        </label>
+                        <input type="number" step="1" min="1"
+                               t-att-max="state.collectFeeData.remaining_due"
+                               class="em-input emd-cf-input"
+                               placeholder="Enter amount"
+                               t-model="state.collectForm.amount_collected"/>
+                        <t t-if="state.collectErrors.amount_collected">
+                          <span class="emd-cf-field-error"><t t-out="state.collectErrors.amount_collected"/></span>
+                        </t>
+                      </div>
+
+                      <!-- Payment Method -->
+                      <div t-attf-class="emd-cf-field {{ state.collectErrors.payment_method ? 'has-error' : '' }}">
+                        <label class="emd-cf-label">Payment Method <span class="emd-cf-required">*</span></label>
+                        <select class="em-input emd-cf-input emd-cf-select" t-model="state.collectForm.payment_method">
+                          <option value="cash">Cash</option>
+                          <option value="upi">UPI</option>
+                          <option value="card">Card</option>
+                          <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                      </div>
+
+                      <!-- Collection Date -->
+                      <div t-attf-class="emd-cf-field {{ state.collectErrors.collection_date ? 'has-error' : '' }}">
+                        <label class="emd-cf-label">Payment Date <span class="emd-cf-required">*</span></label>
+                        <input type="date" class="em-input emd-cf-input"
+                               t-model="state.collectForm.collection_date"/>
+                        <t t-if="state.collectErrors.collection_date">
+                          <span class="emd-cf-field-error"><t t-out="state.collectErrors.collection_date"/></span>
+                        </t>
+                      </div>
+
+                      <!-- Remarks (full width) -->
+                      <div class="emd-cf-field emf-full-col">
+                        <label class="emd-cf-label">Remarks</label>
+                        <input type="text" class="em-input emd-cf-input"
+                               placeholder="Optional notes about this payment"
+                               t-model="state.collectForm.remarks"/>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <!-- Payment history (if any) -->
+                  <t t-if="state.collectFeeData.payments and state.collectFeeData.payments.length > 0">
+                    <div class="em-card emd-cf-card">
+                      <div class="em-section-label">Payment History</div>
+                      <div class="emf-history-table">
+                        <div class="emf-history-head">
+                          <span>Receipt</span>
+                          <span>Date</span>
+                          <span>Method</span>
+                          <span>Amount</span>
+                          <span>Remarks</span>
+                        </div>
+                        <t t-foreach="state.collectFeeData.payments" t-as="p" t-key="p.name">
+                          <div class="emf-history-row">
+                            <span class="emf-history-ref"><t t-out="p.name"/></span>
+                            <span><t t-out="p.collection_date"/></span>
+                            <span><t t-out="p.payment_method"/></span>
+                            <span class="emf-history-amt">₹<t t-out="formatCurrency(p.amount_collected)"/></span>
+                            <span class="emf-history-rem"><t t-out="p.remarks || '—'"/></span>
+                          </div>
+                        </t>
+                      </div>
+                    </div>
+                  </t>
+
+                </t>
+              </div>
+            </t>
+
+            <!-- ── Receipt View ───────────────────────────────── -->
+            <t t-if="state.feesView === 'receipt' and state.currentReceipt">
+              <div class="emf-receipt-wrap">
+
+                <!-- Actions bar (hidden on print) -->
+                <div class="emf-receipt-actions no-print">
+                  <button class="emd-back-btn" t-on-click="backFromReceipt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Fees
+                  </button>
+                  <div style="display:flex;gap:10px;margin-left:auto">
+                    <button class="emf-action-btn activate" t-on-click="printReceipt">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                      Print Receipt
+                    </button>
+                    <button class="emf-action-btn confirm" t-on-click="printReceipt">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+
+                <!-- The Receipt itself -->
+                <div class="emf-receipt" id="emf-receipt-print">
+
+                  <!-- Receipt Header -->
+                  <div class="emf-receipt-header">
+                    <div class="emf-receipt-brand">
+                      <div class="emf-receipt-logo">
+                        <svg viewBox="0 0 40 40" fill="none">
+                          <rect width="40" height="40" rx="10" fill="#4a7c59"/>
+                          <path d="M20 8 L32 14 L32 26 L20 32 L8 26 L8 14 Z" stroke="white" stroke-width="2" fill="none"/>
+                          <path d="M14 20 L20 14 L26 20 L20 26 Z" fill="white" opacity="0.8"/>
+                        </svg>
+                      </div>
+                      <div class="emf-receipt-brand-info">
+                        <div class="emf-receipt-inst-name"><t t-out="state.currentReceipt.institution_name"/></div>
+                        <t t-if="state.currentReceipt.institution_city">
+                          <div class="emf-receipt-inst-addr"><t t-out="state.currentReceipt.institution_city"/></div>
+                        </t>
+                        <t t-if="state.currentReceipt.institution_email">
+                          <div class="emf-receipt-inst-addr"><t t-out="state.currentReceipt.institution_email"/></div>
+                        </t>
+                      </div>
+                    </div>
+                    <div class="emf-receipt-tag">
+                      <div class="emf-receipt-title">PAYMENT RECEIPT</div>
+                      <div class="emf-receipt-number"># <t t-out="state.currentReceipt.receipt_number"/></div>
+                    </div>
+                  </div>
+
+                  <div class="emf-receipt-divider"/>
+
+                  <!-- Student + date info row -->
+                  <div class="emf-receipt-meta-row">
+                    <div class="emf-receipt-meta-block">
+                      <div class="emf-receipt-meta-label">BILLED TO</div>
+                      <div class="emf-receipt-meta-value bold"><t t-out="state.currentReceipt.student_name"/></div>
+                      <t t-if="state.currentReceipt.student_id_code">
+                        <div class="emf-receipt-meta-value small"><t t-out="state.currentReceipt.student_id_code"/></div>
+                      </t>
+                      <div class="emf-receipt-meta-value small">
+                        <t t-if="state.currentReceipt.class_name">Class <t t-out="state.currentReceipt.class_name"/></t>
+                        <t t-if="state.currentReceipt.section_name"> · Section <t t-out="state.currentReceipt.section_name"/></t>
+                      </div>
+                    </div>
+                    <div class="emf-receipt-meta-block right">
+                      <div class="emf-receipt-meta-label">PAYMENT DATE</div>
+                      <div class="emf-receipt-meta-value bold"><t t-out="state.currentReceipt.collection_date"/></div>
+                      <div class="emf-receipt-meta-label" style="margin-top:12px">PAYMENT METHOD</div>
+                      <div class="emf-receipt-meta-value bold"><t t-out="state.currentReceipt.payment_method"/></div>
+                    </div>
+                  </div>
+
+                  <div class="emf-receipt-divider"/>
+
+                  <!-- Fee details table -->
+                  <div class="emf-receipt-section-title">FEE DETAILS</div>
+                  <table class="emf-receipt-table">
+                    <tr>
+                      <td class="emf-receipt-td-label">Fee Month</td>
+                      <td class="emf-receipt-td-val"><t t-out="state.currentReceipt.fee_month || '—'"/></td>
+                    </tr>
+                    <tr>
+                      <td class="emf-receipt-td-label">Academic Year</td>
+                      <td class="emf-receipt-td-val"><t t-out="state.currentReceipt.academic_year || '—'"/></td>
+                    </tr>
+                    <tr>
+                      <td class="emf-receipt-td-label">Total Fee Amount</td>
+                      <td class="emf-receipt-td-val">₹<t t-out="formatCurrency(state.currentReceipt.total_amount)"/></td>
+                    </tr>
+                  </table>
+
+                  <div class="emf-receipt-divider"/>
+
+                  <!-- Payment summary -->
+                  <div class="emf-receipt-section-title">PAYMENT SUMMARY</div>
+                  <table class="emf-receipt-table">
+                    <tr>
+                      <td class="emf-receipt-td-label">Previously Paid</td>
+                      <td class="emf-receipt-td-val">₹<t t-out="formatCurrency(state.currentReceipt.prev_amount_paid)"/></td>
+                    </tr>
+                    <tr>
+                      <td class="emf-receipt-td-label">Amount Collected Now</td>
+                      <td class="emf-receipt-td-val green-text">₹<t t-out="formatCurrency(state.currentReceipt.amount_collected)"/></td>
+                    </tr>
+                  </table>
+                  <div class="emf-receipt-totals">
+                    <div class="emf-receipt-total-row">
+                      <span>TOTAL PAID</span>
+                      <span class="emf-receipt-total-val green-text">₹<t t-out="formatCurrency(state.currentReceipt.amount_paid)"/></span>
+                    </div>
+                    <div class="emf-receipt-total-row remaining">
+                      <span>REMAINING DUE</span>
+                      <span class="emf-receipt-total-val">
+                        ₹<t t-out="formatCurrency(state.currentReceipt.remaining_due)"/>
+                        <span t-attf-class="emf-status-badge {{ state.currentReceipt.status }}" style="margin-left:10px;font-size:10px">
+                          <t t-out="state.currentReceipt.status_label"/>
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Remarks + collected by -->
+                  <t t-if="state.currentReceipt.remarks or state.currentReceipt.collected_by">
+                    <div class="emf-receipt-divider"/>
+                    <div class="emf-receipt-footer-info">
+                      <t t-if="state.currentReceipt.remarks">
+                        <div><strong>Remarks:</strong> <t t-out="state.currentReceipt.remarks"/></div>
+                      </t>
+                      <t t-if="state.currentReceipt.collected_by">
+                        <div><strong>Collected by:</strong> <t t-out="state.currentReceipt.collected_by"/></div>
+                      </t>
+                    </div>
+                  </t>
+
+                  <!-- Receipt footer -->
+                  <div class="emf-receipt-divider"/>
+                  <div class="emf-receipt-bottom">
+                    <div>This is a computer-generated receipt and does not require a signature.</div>
+                    <div>© <t t-out="state.currentReceipt.institution_name"/> — EduManage School Management System</div>
+                  </div>
+
+                </div>
+              </div>
             </t>
 
             <!-- ── Create Fee Structure Form ──────────────────── -->
