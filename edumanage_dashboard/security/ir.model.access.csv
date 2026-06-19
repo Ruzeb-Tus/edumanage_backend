@@ -2,3 +2,6 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_edumanage_class_user,edumanage.class.user,model_edumanage_class,base.group_user,1,1,1,1
 access_edumanage_section_user,edumanage.section.user,model_edumanage_section,base.group_user,1,1,1,1
 access_edumanage_student_user,edumanage.student.user,model_edumanage_student,base.group_user,1,1,1,1
+access_edumanage_fee_structure_user,edumanage.fee.structure.user,model_edumanage_fee_structure,base.group_user,1,1,1,1
+access_edumanage_student_fee_user,edumanage.student.fee.user,model_edumanage_student_fee,base.group_user,1,1,1,1
+access_edumanage_fee_payment_user,edumanage.fee.payment.user,model_edumanage_fee_payment,base.group_user,1,1,1,1

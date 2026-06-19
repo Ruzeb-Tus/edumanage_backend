@@ -844,37 +844,325 @@
 
           <!-- ══ FEES TAB ═════════════════════════════════════ -->
           <t t-elif="state.activeNav === 'fees'">
-            <div class="emd-panel">
-              <div class="emd-panel-header">
-                <span class="emd-panel-title">Pending &amp; Outstanding Collections</span>
+
+            <!-- ── Fees List ──────────────────────────────────── -->
+            <t t-if="state.feesView === 'list'">
+
+              <!-- Page bar -->
+              <div class="emd-page-bar">
+                <div class="emd-page-bar-left">
+                  <h2 class="emd-page-bar-title">Fees Management</h2>
+                </div>
+                <div class="emd-page-bar-right">
+                  <div class="emd-sub-tabs">
+                    <button t-attf-class="emd-sub-tab {{ state.activeFeesSubTab === 'pending' ? 'active' : '' }}"
+                            t-on-click="() => setFeesSubTab('pending')">
+                      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-2px;margin-right:4px">
+                        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                      </svg>
+                      Pending Fees
+                    </button>
+                    <button t-attf-class="emd-sub-tab {{ state.activeFeesSubTab === 'structures' ? 'active' : '' }}"
+                            t-on-click="() => setFeesSubTab('structures')">
+                      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-2px;margin-right:4px">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      Fee Structures
+                    </button>
+                  </div>
+                  <t t-if="state.activeFeesSubTab === 'structures'">
+                    <button class="emd-btn-add" t-on-click="openCreateFeeStructure">
+                      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      New Fee Structure
+                    </button>
+                  </t>
+                </div>
               </div>
-              <div class="emd-panel-body">
-                <div style="display: grid; gap: 12px; margin-top: 12px;">
-                  <!-- Fee 1 -->
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
-                    <div>
-                      <div style="font-size: 14px; font-weight: 600;">Priya Mehta</div>
-                      <div style="font-size: 12px; color: var(--emd-text-3);">Term 2 Fees · Class 9B</div>
+
+              <!-- ── Pending Fees sub-tab ──────────────────────── -->
+              <t t-if="state.activeFeesSubTab === 'pending'">
+
+                <!-- Stats band -->
+                <div class="emf-stats-band">
+                  <div class="emf-stat-card warn">
+                    <div class="emf-stat-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                     </div>
-                    <div style="text-align: right;">
-                      <div style="font-size: 14px; font-weight: 600; color: var(--emd-amber);">₹8,500 Due</div>
-                      <div style="font-size: 12px; color: var(--emd-text-3);">Overdue 2 days</div>
+                    <div class="emf-stat-body">
+                      <div class="emf-stat-value">₹<t t-out="formatCurrency(feeStats.totalDue)"/></div>
+                      <div class="emf-stat-label">Total Outstanding</div>
                     </div>
                   </div>
-                  <!-- Fee 2 -->
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border: 1px solid var(--emd-border); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
-                    <div>
-                      <div style="font-size: 14px; font-weight: 600;">Rahul Verma</div>
-                      <div style="font-size: 12px; color: var(--emd-text-3);">Activity Charges · Class 10A</div>
+                  <div class="emf-stat-card danger">
+                    <div class="emf-stat-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     </div>
-                    <div style="text-align: right;">
-                      <div style="font-size: 14px; font-weight: 600; color: var(--emd-amber);">₹5,200 Due</div>
-                      <div style="font-size: 12px; color: var(--emd-text-3);">Overdue 5 days</div>
+                    <div class="emf-stat-body">
+                      <div class="emf-stat-value"><t t-out="feeStats.overdue"/></div>
+                      <div class="emf-stat-label">Overdue Students</div>
+                    </div>
+                  </div>
+                  <div class="emf-stat-card blue">
+                    <div class="emf-stat-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="emf-stat-body">
+                      <div class="emf-stat-value"><t t-out="feeStats.pending"/></div>
+                      <div class="emf-stat-label">Pending / Partial</div>
+                    </div>
+                  </div>
+                  <div class="emf-stat-card green">
+                    <div class="emf-stat-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="emf-stat-body">
+                      <div class="emf-stat-value"><t t-out="feeStats.paid"/></div>
+                      <div class="emf-stat-label">Paid</div>
                     </div>
                   </div>
                 </div>
+
+                <!-- Filter pills -->
+                <div class="emd-filter-bar">
+                  <div t-attf-class="emd-filter-pill {{ state.feeFilter === 'all' ? 'active' : '' }}"
+                       t-on-click="() => setFeeFilter('all')">
+                    All <span style="opacity:0.6">· <t t-out="(state.studentFees||[]).length"/></span>
+                  </div>
+                  <div t-attf-class="emd-filter-pill {{ state.feeFilter === 'pending' ? 'active' : '' }}"
+                       t-on-click="() => setFeeFilter('pending')">
+                    Pending <span style="opacity:0.6">· <t t-out="feeStats.pending"/></span>
+                  </div>
+                  <div t-attf-class="emd-filter-pill {{ state.feeFilter === 'overdue' ? 'active' : '' }}"
+                       t-on-click="() => setFeeFilter('overdue')">
+                    Overdue <span style="opacity:0.6">· <t t-out="feeStats.overdue"/></span>
+                  </div>
+                  <div t-attf-class="emd-filter-pill {{ state.feeFilter === 'partial' ? 'active' : '' }}"
+                       t-on-click="() => setFeeFilter('partial')">
+                    Partial
+                  </div>
+                  <div t-attf-class="emd-filter-pill {{ state.feeFilter === 'paid' ? 'active' : '' }}"
+                       t-on-click="() => setFeeFilter('paid')">
+                    Paid <span style="opacity:0.6">· <t t-out="feeStats.paid"/></span>
+                  </div>
+                </div>
+
+                <!-- Fee rows -->
+                <div class="emf-list">
+                  <t t-if="filteredStudentFees.length === 0">
+                    <div class="emf-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                      </svg>
+                      <div class="emf-empty-title">No fees found</div>
+                      <div class="emf-empty-desc">
+                        <t t-if="state.feeFilter === 'all'">No fee assignments yet. Confirm a Fee Structure to auto-assign fees.</t>
+                        <t t-else="">No fees match the selected filter.</t>
+                      </div>
+                    </div>
+                  </t>
+                  <t t-foreach="filteredStudentFees" t-as="fee" t-key="fee.id">
+                    <div class="emf-fee-row">
+                      <!-- Avatar -->
+                      <div t-attf-class="emf-fee-avatar {{ fee.status }}">
+                        <t t-out="formatMany2one(fee.student_id) ? formatMany2one(fee.student_id).split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) : '?'"/>
+                      </div>
+                      <!-- Student info -->
+                      <div class="emf-fee-info">
+                        <div class="emf-fee-name"><t t-out="formatMany2one(fee.student_id)"/></div>
+                        <div class="emf-fee-meta">
+                          <t t-out="formatMany2one(fee.class_id) ? 'Class ' + formatMany2one(fee.class_id) : ''"/>
+                          <t t-if="fee.academic_year"> · <t t-out="fee.academic_year"/></t>
+                          <t t-if="fee.fee_month"> · <t t-out="fee.fee_month"/></t>
+                        </div>
+                      </div>
+                      <!-- Amount -->
+                      <div class="emf-fee-amount-block">
+                        <div t-attf-class="emf-fee-due {{ fee.status }}">
+                          ₹<t t-out="formatCurrency(fee.remaining_due)"/>
+                          <span class="emf-fee-due-label">due</span>
+                        </div>
+                        <div class="emf-fee-total">Total ₹<t t-out="formatCurrency(fee.total_amount)"/></div>
+                      </div>
+                      <!-- Status badge -->
+                      <div class="emf-fee-status-wrap">
+                        <span t-attf-class="emf-status-badge {{ fee.status }}">
+                          <t t-if="fee.status === 'paid'">Paid</t>
+                          <t t-elif="fee.status === 'partial'">Partial</t>
+                          <t t-elif="fee.status === 'overdue'">Overdue</t>
+                          <t t-else="">Pending</t>
+                        </span>
+                      </div>
+                    </div>
+                  </t>
+                </div>
+
+              </t>
+
+              <!-- ── Fee Structures sub-tab ─────────────────────── -->
+              <t t-if="state.activeFeesSubTab === 'structures'">
+                <div class="emf-list">
+                  <t t-if="!state.feeStructures || state.feeStructures.length === 0">
+                    <div class="emf-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                      </svg>
+                      <div class="emf-empty-title">No fee structures yet</div>
+                      <div class="emf-empty-desc">Create one and confirm it to auto-assign fees to all students in the class.</div>
+                      <button class="emd-btn-add emf-empty-action" t-on-click="openCreateFeeStructure">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        New Fee Structure
+                      </button>
+                    </div>
+                  </t>
+                  <t t-foreach="state.feeStructures" t-as="struct" t-key="struct.id">
+                    <div class="emf-struct-card">
+                      <!-- Left: icon + info -->
+                      <div class="emf-struct-left">
+                        <div class="emf-struct-icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <div class="emf-struct-ref"><t t-out="struct.name"/></div>
+                          <div class="emf-struct-meta">
+                            <t t-out="formatMany2one(struct.class_id) ? 'Class ' + formatMany2one(struct.class_id) : '—'"/>
+                            · <t t-out="struct.academic_year"/>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Middle: amount + status -->
+                      <div class="emf-struct-mid">
+                        <div class="emf-struct-amount">₹<t t-out="formatCurrency(struct.amount)"/></div>
+                        <span t-attf-class="emf-struct-badge {{ struct.status }}">
+                          <t t-if="struct.status === 'draft'">Draft</t>
+                          <t t-elif="struct.status === 'active'">Active</t>
+                          <t t-else="">Inactive</t>
+                        </span>
+                      </div>
+                      <!-- Right: actions -->
+                      <div class="emf-struct-actions">
+                        <t t-if="struct.status === 'draft'">
+                          <button class="emf-action-btn confirm" t-on-click="() => confirmFeeStructure(struct.id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg>
+                            Confirm &amp; Assign
+                          </button>
+                          <button class="emf-action-btn revoke" t-on-click="() => revokeFeeStructure(struct.id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                            Delete
+                          </button>
+                        </t>
+                        <t t-elif="struct.status === 'active'">
+                          <button class="emf-action-btn deactivate" t-on-click="() => toggleFeeStructureStatus(struct.id, 'inactive')">
+                            Deactivate
+                          </button>
+                        </t>
+                        <t t-else="">
+                          <button class="emf-action-btn activate" t-on-click="() => toggleFeeStructureStatus(struct.id, 'active')">
+                            Activate
+                          </button>
+                          <button class="emf-action-btn revoke" t-on-click="() => revokeFeeStructure(struct.id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                            Delete
+                          </button>
+                        </t>
+                      </div>
+                    </div>
+                  </t>
+                </div>
+              </t>
+
+            </t>
+
+            <!-- ── Create Fee Structure Form ──────────────────── -->
+            <t t-if="state.feesView === 'form'">
+              <div class="emf-form-wrap">
+
+                <!-- Header -->
+                <div class="emd-class-form-header">
+                  <button class="emd-back-btn" t-on-click="cancelFeeStructureForm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Fee Structures
+                  </button>
+                  <div class="emd-class-form-title-block">
+                    <h2 class="emd-class-form-title">New Fee Structure</h2>
+                  </div>
+                  <div class="emd-class-form-actions">
+                    <button class="emd-cf-btn ghost" t-on-click="cancelFeeStructureForm">Cancel</button>
+                    <button class="emd-cf-btn primary" t-on-click="saveFeeStructureForm" t-att-disabled="state.feeStructureSaving">
+                      <t t-if="state.feeStructureSaving">Saving…</t>
+                      <t t-else="">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
+                        Save as Draft
+                      </t>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Form error -->
+                <t t-if="state.feeStructureErrors._form">
+                  <div class="emd-class-form-error"><t t-out="state.feeStructureErrors._form"/></div>
+                </t>
+
+                <!-- Info banner -->
+                <div class="emf-info-banner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <div>
+                    After saving, click <strong>Confirm &amp; Assign</strong> on the structure card. The system will automatically traverse
+                    <strong>Class → Sections → Students</strong> and assign the fee to every active student.
+                  </div>
+                </div>
+
+                <!-- Form card -->
+                <div class="em-card emd-cf-card">
+                  <div class="em-section-label">Structure Details</div>
+                  <div class="emd-cf-field-grid">
+
+                    <!-- Class -->
+                    <div t-attf-class="emd-cf-field {{ state.feeStructureErrors.class_id ? 'has-error' : '' }}">
+                      <label class="emd-cf-label">Target Class <span class="emd-cf-required">*</span></label>
+                      <select class="em-input emd-cf-input emd-cf-select" t-model="state.feeStructureForm.class_id">
+                        <option value="">Select a class…</option>
+                        <t t-foreach="state.classes" t-as="cls" t-key="cls.id">
+                          <option t-att-value="cls.id"><t t-out="cls.name"/></option>
+                        </t>
+                      </select>
+                      <t t-if="state.feeStructureErrors.class_id">
+                        <span class="emd-cf-field-error"><t t-out="state.feeStructureErrors.class_id"/></span>
+                      </t>
+                    </div>
+
+                    <!-- Amount -->
+                    <div t-attf-class="emd-cf-field {{ state.feeStructureErrors.amount ? 'has-error' : '' }}">
+                      <label class="emd-cf-label">Annual Fee Amount (₹) <span class="emd-cf-required">*</span></label>
+                      <input type="number" step="1" min="1" class="em-input emd-cf-input"
+                             placeholder="e.g. 10000"
+                             t-model="state.feeStructureForm.amount"/>
+                      <t t-if="state.feeStructureErrors.amount">
+                        <span class="emd-cf-field-error"><t t-out="state.feeStructureErrors.amount"/></span>
+                      </t>
+                    </div>
+
+                    <!-- Academic Year -->
+                    <div t-attf-class="emd-cf-field {{ state.feeStructureErrors.academic_year ? 'has-error' : '' }}">
+                      <label class="emd-cf-label">Academic Year <span class="emd-cf-required">*</span></label>
+                      <input type="text" class="em-input emd-cf-input"
+                             placeholder="e.g. 2026-27"
+                             t-model="state.feeStructureForm.academic_year"/>
+                      <t t-if="state.feeStructureErrors.academic_year">
+                        <span class="emd-cf-field-error"><t t-out="state.feeStructureErrors.academic_year"/></span>
+                      </t>
+                    </div>
+
+                  </div>
+                </div>
+
               </div>
-            </div>
+            </t>
+
           </t>
 
           <!-- ══ DOCUMENTS TAB ════════════════════════════════ -->

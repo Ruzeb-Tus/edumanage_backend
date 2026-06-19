@@ -80,37 +80,37 @@ class EduManageFeeStructure(models.Model):
             if record.amount <= 0:
                 raise ValidationError(_("Fee Amount must be strictly positive."))
                 
-            students = self.env['edumanage.student'].search([
-                ('class_id', '=', record.class_id.id),
-                ('status', '=', 'active')
-            ])
+            # Traverse hierarchy: Class -> Sections -> Students
+            cls = record.class_id
+            active_students = []
+            for section in cls.section_ids:
+                students_in_section = self.env['edumanage.student'].search([
+                    ('section_id', '=', section.id),
+                    ('status', '=', 'active')
+                ])
+                for student in students_in_section:
+                    active_students.append(student)
             
             student_fee_env = self.env['edumanage.student.fee']
-            months_def = _get_months_for_year(record.academic_year)
-            
-            for student in students:
-                for m_num, m_year, m_name in months_def:
-                    fee_month = f"{m_name} {m_year}"
-                    due_date = f"{m_year:04d}-{m_num:02d}-01"
-                    
-                    existing_fee = student_fee_env.search([
-                        ('student_id', '=', student.id),
-                        ('fee_structure_id', '=', record.id),
-                        ('fee_month', '=', fee_month)
-                    ], limit=1)
-                    
-                    if not existing_fee:
-                        student_fee_env.create({
-                            'student_id': student.id,
-                            'fee_structure_id': record.id,
-                            'total_amount': record.amount,
-                            'academic_year': record.academic_year,
-                            'fee_month': fee_month,
-                            'due_date': due_date,
-                            'status': 'pending',
-                        })
-                        if student.fee_status == 'paid':
-                            student.fee_status = 'due'
+            for student in active_students:
+                # Prevent duplicate creation of the same fee assignment for the same academic year
+                existing_fee = student_fee_env.search([
+                    ('student_id', '=', student.id),
+                    ('academic_year', '=', record.academic_year),
+                    ('fee_structure_id', '=', record.id)
+                ], limit=1)
+                
+                if not existing_fee:
+                    student_fee_env.create({
+                        'student_id': student.id,
+                        'fee_structure_id': record.id,
+                        'total_amount': record.amount,
+                        'academic_year': record.academic_year,
+                        'fee_month': 'Annual',
+                        'status': 'pending',
+                    })
+                    if student.fee_status == 'paid':
+                        student.fee_status = 'due'
             
             record.status = 'active'
         return True

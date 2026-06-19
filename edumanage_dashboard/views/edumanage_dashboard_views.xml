@@ -19,5 +19,4 @@
     <record id="edumanage_setup.menu_edumanage_root" model="ir.ui.menu">
         <field name="action" ref="action_edumanage_dashboard"/>
     </record>
-
 </odoo>

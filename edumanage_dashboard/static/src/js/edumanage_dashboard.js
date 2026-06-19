@@ -132,6 +132,19 @@ function emptyAdmissionForm() {
   };
 }
 
+function emptyFeeStructureForm() {
+  return {
+    class_id: "",
+    amount: "",
+    academic_year: "",
+    status: "draft",
+  };
+}
+
+function formatCurrency(amount) {
+  return Number(amount || 0).toLocaleString("en-IN");
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getGreeting() {
@@ -212,6 +225,16 @@ export class EduManageDashboard extends Component {
       classFormErrors: {},
       classFormSaving: false,
       newSectionName: '',
+      // Fees state
+      activeFeesSubTab: "pending",
+      feesView: "list",
+      feeStructures: [],
+      studentFees: [],
+      classes: [],
+      feeFilter: "all",
+      feeStructureForm: emptyFeeStructureForm(),
+      feeStructureSaving: false,
+      feeStructureErrors: {},
     });
 
     this.navItems     = NAV_ITEMS;
@@ -251,6 +274,16 @@ export class EduManageDashboard extends Component {
     this.addSection         = this.addSection.bind(this);
     this.onSectionKeydown   = this.onSectionKeydown.bind(this);
     this.viewStudentsForSection = this.viewStudentsForSection.bind(this);
+    // Fees bindings
+    this.openCreateFeeStructure   = this.openCreateFeeStructure.bind(this);
+    this.cancelFeeStructureForm   = this.cancelFeeStructureForm.bind(this);
+    this.saveFeeStructureForm     = this.saveFeeStructureForm.bind(this);
+    this.confirmFeeStructure      = this.confirmFeeStructure.bind(this);
+    this.toggleFeeStructureStatus = this.toggleFeeStructureStatus.bind(this);
+    this.setFeesSubTab            = this.setFeesSubTab.bind(this);
+    this.setFeeFilter             = this.setFeeFilter.bind(this);
+    this.revokeFeeStructure       = this.revokeFeeStructure.bind(this);
+    this.formatCurrency           = formatCurrency;
 
     // Sync activeNav from router state on popstate/ROUTE_CHANGE
     const onRoute = () => {
@@ -287,6 +320,7 @@ export class EduManageDashboard extends Component {
     onMounted(async () => {
       await this._loadUserInfo();
       await this._loadStudents();
+      await this._loadFeesData();
       if (this.state.studentsView === "profile" && this.state.selectedStudentId) {
         await this._loadStudentProfile(this.state.selectedStudentId);
       }
@@ -396,6 +430,9 @@ export class EduManageDashboard extends Component {
       return;
     }
     this.state.activeNav = id;
+    if (id === "fees") {
+      this._loadFeesData();
+    }
     if (id !== "students") {
       this.state.studentsView = "roster";
       this.state.selectedStudentId = null;
@@ -786,6 +823,127 @@ export class EduManageDashboard extends Component {
   }
   setStudentFilter(filterId) { this.state.studentFilter = filterId; }
   onStudentSearch() { /* reactive via t-model */ }
+
+  // ── Fees getters ─────────────────────────────────────────────────────────
+
+  get filteredStudentFees() {
+    const fees = this.state.studentFees || [];
+    const f = this.state.feeFilter;
+    if (f === "all") return fees;
+    return fees.filter(fee => fee.status === f);
+  }
+
+  get feeStats() {
+    const fees = this.state.studentFees || [];
+    const totalDue = fees.reduce((s, f) => s + (f.remaining_due || 0), 0);
+    const overdue  = fees.filter(f => f.status === "overdue").length;
+    const paid     = fees.filter(f => f.status === "paid").length;
+    const pending  = fees.filter(f => f.status === "pending" || f.status === "partial").length;
+    return { totalDue, overdue, paid, pending };
+  }
+
+  // ── Fees data ─────────────────────────────────────────────────────────────
+
+  async _loadFeesData() {
+    try {
+      const [structures, studentFees, classes] = await Promise.all([
+        this.orm.searchRead(
+          "edumanage.fee.structure", [],
+          ["name", "class_id", "amount", "academic_year", "status"],
+          { order: "id desc" }
+        ),
+        this.orm.searchRead(
+          "edumanage.student.fee", [],
+          ["name", "student_id", "class_id", "section_id", "total_amount", "amount_paid",
+           "remaining_due", "status", "due_date", "academic_year", "fee_month"],
+          { order: "id desc" }
+        ),
+        this.orm.searchRead("edumanage.class", [], ["name"], { order: "name asc" }),
+      ]);
+      this.state.feeStructures = structures || [];
+      this.state.studentFees   = studentFees || [];
+      this.state.classes       = classes || [];
+    } catch (err) {
+      console.error("Error loading fees data:", err);
+    }
+  }
+
+  // ── Fees actions ──────────────────────────────────────────────────────────
+
+  setFeesSubTab(tab) {
+    this.state.activeFeesSubTab = tab;
+    this.state.feesView = "list";
+    this.state.feeFilter = "all";
+  }
+
+  setFeeFilter(f) { this.state.feeFilter = f; }
+
+  openCreateFeeStructure() {
+    this.state.feeStructureForm = emptyFeeStructureForm();
+    this.state.feeStructureErrors = {};
+    this.state.feesView = "form";
+  }
+
+  cancelFeeStructureForm() {
+    this.state.feesView = "list";
+    this.state.feeStructureErrors = {};
+  }
+
+  async saveFeeStructureForm() {
+    const form = this.state.feeStructureForm;
+    const errors = {};
+    if (!form.class_id)    errors.class_id = "Class is required";
+    if (!form.amount || parseFloat(form.amount) <= 0) errors.amount = "Fee amount must be positive";
+    if (!form.academic_year?.trim()) errors.academic_year = "Academic year is required";
+
+    this.state.feeStructureErrors = errors;
+    if (Object.keys(errors).length > 0) return;
+
+    this.state.feeStructureSaving = true;
+    try {
+      const vals = {
+        class_id: parseInt(form.class_id, 10),
+        amount: parseFloat(form.amount),
+        academic_year: form.academic_year.trim(),
+        status: "draft",
+      };
+      await this.orm.create("edumanage.fee.structure", [vals]);
+      await this._loadFeesData();
+      this.state.feesView = "list";
+      this.state.activeFeesSubTab = "structures";
+      this.state.feeStructureSaving = false;
+    } catch (err) {
+      this.state.feeStructureSaving = false;
+      this.state.feeStructureErrors = { _form: err.message || "Failed to save Fee Structure." };
+    }
+  }
+
+  async confirmFeeStructure(id) {
+    try {
+      await this.orm.call("edumanage.fee.structure", "action_confirm", [id]);
+      await this._loadFeesData();
+    } catch (err) {
+      console.error("Failed to confirm fee structure:", err);
+    }
+  }
+
+  async revokeFeeStructure(id) {
+    try {
+      await this.orm.call("edumanage.fee.structure", "action_revoke", [id]);
+      await this._loadFeesData();
+    } catch (err) {
+      console.error("Failed to revoke fee structure:", err);
+    }
+  }
+
+  async toggleFeeStructureStatus(id, newStatus) {
+    try {
+      await this.orm.write("edumanage.fee.structure", [id], { status: newStatus });
+      await this._loadFeesData();
+    } catch (err) {
+      console.error("Failed to update fee structure status:", err);
+    }
+  }
 }
 
 registry.category("actions").add("edumanage_dashboard.main", EduManageDashboard);
