@@ -150,6 +150,15 @@ function emptyFeeStructureForm() {
   };
 }
 
+function emptyDocumentForm() {
+  return {
+    name: "",
+    doc_type: "other",
+    file: null,
+    filename: "",
+  };
+}
+
 function formatCurrency(amount) {
   return Number(amount || 0).toLocaleString("en-IN");
 }
@@ -217,6 +226,15 @@ export class EduManageDashboard extends Component {
       studentsView: initialStudentsView,
       selectedStudentId: initialStudentId,
       selectedStudent: null,
+      profileTab: "overview",
+      profileDocuments: [],
+      profileFeeHistory: [],
+      profileReceipts: [],
+      profileReceipt: null,
+      profileDocForm: emptyDocumentForm(),
+      profileDocUploading: false,
+      profileDocErrors: {},
+      profileTabLoading: false,
       studentFilter: "all",
       studentSearch: "",
       students: STUDENTS_DATA.map(mapStudentInitials),
@@ -276,6 +294,16 @@ export class EduManageDashboard extends Component {
     this.saveAdmission      = this.saveAdmission.bind(this);
     this.openStudentProfile = this.openStudentProfile.bind(this);
     this.backToRoster       = this.backToRoster.bind(this);
+    this.setProfileTab      = this.setProfileTab.bind(this);
+    this.onProfileDocSelect = this.onProfileDocSelect.bind(this);
+    this.uploadProfileDocument = this.uploadProfileDocument.bind(this);
+    this.viewProfileDocument   = this.viewProfileDocument.bind(this);
+    this.downloadProfileDocument = this.downloadProfileDocument.bind(this);
+    this.deleteProfileDocument   = this.deleteProfileDocument.bind(this);
+    this.viewProfileReceipt      = this.viewProfileReceipt.bind(this);
+    this.printProfileReceiptById = this.printProfileReceiptById.bind(this);
+    this.backFromProfileReceipt  = this.backFromProfileReceipt.bind(this);
+    this.printProfileReceipt     = this.printProfileReceipt.bind(this);
     this.onAdmissionClassChange = this.onAdmissionClassChange.bind(this);
     this.onAdmissionCountryChange = this.onAdmissionCountryChange.bind(this);
     this.onPhotoSelect      = this.onPhotoSelect.bind(this);
@@ -408,6 +436,38 @@ export class EduManageDashboard extends Component {
       }
     } catch (_) {
       this.state.selectedStudent = this.state.students.find(s => s.id === studentId) || null;
+    }
+  }
+
+  async _loadProfileTabData(tab) {
+    const studentId = this.state.selectedStudentId;
+    if (!studentId) return;
+    this.state.profileTabLoading = true;
+    try {
+      if (tab === "documents") {
+        this.state.profileDocuments = await this.orm.call(
+          "edumanage.student.document", "get_student_documents", [studentId]
+        ) || [];
+      } else if (tab === "fee_history") {
+        this.state.profileFeeHistory = await this.orm.call(
+          "edumanage.student", "get_student_fee_history", [studentId]
+        ) || [];
+      } else if (tab === "receipts") {
+        this.state.profileReceipts = await this.orm.call(
+          "edumanage.student", "get_student_receipts", [studentId]
+        ) || [];
+      }
+    } catch (err) {
+      console.error("_loadProfileTabData error", err);
+    }
+    this.state.profileTabLoading = false;
+  }
+
+  async setProfileTab(tab) {
+    this.state.profileTab = tab;
+    this.state.profileReceipt = null;
+    if (tab !== "overview") {
+      await this._loadProfileTabData(tab);
     }
   }
   async _loadUserInfo() {
@@ -577,6 +637,13 @@ export class EduManageDashboard extends Component {
   async openStudentProfile(studentId) {
     this.state.studentsView = "profile";
     this.state.selectedStudentId = studentId;
+    this.state.profileTab = "overview";
+    this.state.profileDocuments = [];
+    this.state.profileFeeHistory = [];
+    this.state.profileReceipts = [];
+    this.state.profileReceipt = null;
+    this.state.profileDocForm = emptyDocumentForm();
+    this.state.profileDocErrors = {};
     await this._loadStudentProfile(studentId);
     this._pushStudentsRoute({ studentsView: "profile", studentId });
   }
@@ -812,6 +879,134 @@ export class EduManageDashboard extends Component {
   formatGender(gender) {
     if (!gender) return "—";
     return gender.charAt(0).toUpperCase() + gender.slice(1);
+  }
+
+  // ── Student Profile tabs ─────────────────────────────────────────────────
+
+  onProfileDocSelect(ev) {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.state.profileDocForm.file = e.target.result.split(",")[1];
+      this.state.profileDocForm.filename = file.name;
+      if (!this.state.profileDocForm.name) {
+        this.state.profileDocForm.name = file.name.replace(/\.[^.]+$/, "");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async uploadProfileDocument() {
+    const form = this.state.profileDocForm;
+    const errors = {};
+    if (!form.name?.trim()) errors.name = "Document name is required.";
+    if (!form.file) errors.file = "Please select a file.";
+    this.state.profileDocErrors = errors;
+    if (Object.keys(errors).length > 0) return;
+
+    this.state.profileDocUploading = true;
+    try {
+      await this.orm.call("edumanage.student.document", "upload_student_document", [
+        this.state.selectedStudentId,
+        {
+          name: form.name.trim(),
+          doc_type: form.doc_type,
+          file: form.file,
+          filename: form.filename,
+        },
+      ]);
+      this.state.profileDocForm = emptyDocumentForm();
+      this.state.profileDocErrors = {};
+      await this._loadProfileTabData("documents");
+      this.state.profileDocUploading = false;
+    } catch (err) {
+      this.state.profileDocUploading = false;
+      this.state.profileDocErrors = { _form: err.message || "Upload failed." };
+    }
+  }
+
+  _guessMime(filename) {
+    const ext = (filename || "").split(".").pop()?.toLowerCase();
+    const map = {
+      pdf: "application/pdf",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      gif: "image/gif",
+      webp: "image/webp",
+    };
+    return map[ext] || "application/octet-stream";
+  }
+
+  async _getDocumentBlob(docId) {
+    const data = await this.orm.call("edumanage.student.document", "get_document_file", [docId]);
+    if (!data?.file) return null;
+    const mime = this._guessMime(data.filename);
+    const binary = atob(data.file);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return { blob: new Blob([bytes], { type: mime }), filename: data.filename, mime };
+  }
+
+  async viewProfileDocument(docId) {
+    try {
+      const result = await this._getDocumentBlob(docId);
+      if (!result) return;
+      const url = URL.createObjectURL(result.blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      console.error("viewProfileDocument error", err);
+    }
+  }
+
+  async downloadProfileDocument(docId) {
+    try {
+      const result = await this._getDocumentBlob(docId);
+      if (!result) return;
+      const url = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = result.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("downloadProfileDocument error", err);
+    }
+  }
+
+  async deleteProfileDocument(docId) {
+    try {
+      await this.orm.call("edumanage.student.document", "delete_student_document", [docId]);
+      await this._loadProfileTabData("documents");
+    } catch (err) {
+      console.error("deleteProfileDocument error", err);
+    }
+  }
+
+  async viewProfileReceipt(paymentId) {
+    try {
+      const receipt = await this.orm.call("edumanage.fee.payment", "get_payment_receipt", [paymentId]);
+      if (receipt) {
+        this.state.profileReceipt = receipt;
+      }
+    } catch (err) {
+      console.error("viewProfileReceipt error", err);
+    }
+  }
+
+  async printProfileReceiptById(paymentId) {
+    await this.viewProfileReceipt(paymentId);
+    setTimeout(() => window.print(), 400);
+  }
+
+  backFromProfileReceipt() {
+    this.state.profileReceipt = null;
+  }
+
+  printProfileReceipt() {
+    window.print();
   }
 
   setStudentsSubTab(tab) {

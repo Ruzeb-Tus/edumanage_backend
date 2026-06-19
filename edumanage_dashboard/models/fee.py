@@ -335,3 +335,39 @@ class EduManageFeePayment(models.Model):
         self.ensure_one()
         return self.env.ref('edumanage_dashboard.action_report_fee_receipt').report_action(self)
 
+    @api.model
+    def get_payment_receipt(self, payment_id):
+        payment = self.browse(int(payment_id))
+        if not payment.exists():
+            return False
+        fee = payment.student_fee_id
+        pm_labels = dict(self._fields['payment_method'].selection)
+        status_labels = {'pending': 'Pending', 'partial': 'Partial', 'paid': 'Paid', 'overdue': 'Overdue'}
+        company = self.env.company
+        return {
+            'receipt_number': payment.name,
+            'student_name': payment.student_id.name,
+            'student_id_code': payment.student_id.student_id_code or '',
+            'roll_no': payment.student_id.roll_no or '',
+            'class_name': payment.class_id.name if payment.class_id else '',
+            'section_name': payment.section_id.name if payment.section_id else '',
+            'academic_year': payment.academic_year or '',
+            'fee_month': payment.fee_month or '',
+            'collection_date': payment.collection_date.strftime('%d %b %Y') if payment.collection_date else '',
+            'payment_method': pm_labels.get(payment.payment_method, payment.payment_method),
+            'amount_collected': payment.amount_collected,
+            'total_amount': fee.total_amount if fee else payment.amount_collected,
+            'prev_amount_paid': (fee.amount_paid - payment.amount_collected) if fee else 0,
+            'amount_paid': fee.amount_paid if fee else payment.amount_collected,
+            'remaining_due': fee.remaining_due if fee else 0,
+            'status': fee.status if fee else 'paid',
+            'status_label': status_labels.get(fee.status if fee else 'paid', 'Paid'),
+            'remarks': payment.remarks or '',
+            'collected_by': payment.collected_by or '',
+            'institution_name': company.name or 'EduManage',
+            'institution_street': company.street or '',
+            'institution_city': company.city or '',
+            'institution_phone': company.phone or '',
+            'institution_email': company.email or '',
+        }
+

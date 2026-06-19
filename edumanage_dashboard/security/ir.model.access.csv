@@ -5,3 +5,4 @@ access_edumanage_student_user,edumanage.student.user,model_edumanage_student,bas
 access_edumanage_fee_structure_user,edumanage.fee.structure.user,model_edumanage_fee_structure,base.group_user,1,1,1,1
 access_edumanage_student_fee_user,edumanage.student.fee.user,model_edumanage_student_fee,base.group_user,1,1,1,1
 access_edumanage_fee_payment_user,edumanage.fee.payment.user,model_edumanage_fee_payment,base.group_user,1,1,1,1
+access_edumanage_student_document_user,edumanage.student.document.user,model_edumanage_student_document,base.group_user,1,1,1,1

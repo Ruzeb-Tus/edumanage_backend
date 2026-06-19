@@ -279,6 +279,53 @@ class EduManageStudent(models.Model):
             return False
         return self._student_to_dict(student)
 
+    @api.model
+    def get_student_fee_history(self, student_id):
+        fees = self.env['edumanage.student.fee'].search(
+            [('student_id', '=', int(student_id))], order='due_date desc, id desc'
+        )
+        status_labels = {
+            'pending': 'Pending',
+            'partial': 'Partial',
+            'paid': 'Paid',
+            'overdue': 'Overdue',
+        }
+        result = []
+        for fee in fees:
+            last_payment = fee.payment_ids.sorted('collection_date', reverse=True)[:1]
+            result.append({
+                'id': fee.id,
+                'fee_month': fee.fee_month or 'Annual',
+                'academic_year': fee.academic_year or '',
+                'total_amount': fee.total_amount,
+                'amount_paid': fee.amount_paid,
+                'remaining_due': fee.remaining_due,
+                'status': fee.status,
+                'status_label': status_labels.get(fee.status, fee.status.title()),
+                'due_date': fee.due_date.strftime('%d %b %Y') if fee.due_date else '',
+                'payment_date': (
+                    last_payment.collection_date.strftime('%d %b %Y')
+                    if last_payment and last_payment.collection_date else ''
+                ),
+            })
+        return result
+
+    @api.model
+    def get_student_receipts(self, student_id):
+        payments = self.env['edumanage.fee.payment'].search(
+            [('student_id', '=', int(student_id))], order='collection_date desc, id desc'
+        )
+        pm_labels = dict(self.env['edumanage.fee.payment']._fields['payment_method'].selection)
+        return [{
+            'id': p.id,
+            'receipt_number': p.name,
+            'fee_month': p.fee_month or '',
+            'academic_year': p.academic_year or '',
+            'collection_date': p.collection_date.strftime('%d %b %Y') if p.collection_date else '',
+            'amount_collected': p.amount_collected,
+            'payment_method': pm_labels.get(p.payment_method, p.payment_method),
+        } for p in payments]
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
