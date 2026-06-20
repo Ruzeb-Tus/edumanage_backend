@@ -420,13 +420,29 @@
                     <h2 class="emd-page-bar-title">New Student Admission</h2>
                     <p class="emd-admission-subtitle">Register a new student with class and section assignment</p>
                   </div>
+                  <div class="emd-profile-gear-wrap">
+                    <button class="emd-profile-gear-btn" t-on-click="() => toggleSettingsMenu('admission')"
+                            t-att-aria-expanded="state.settingsMenu === 'admission'" aria-label="Admission settings">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                    <t t-if="state.settingsMenu === 'admission'">
+                      <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                      <div class="emd-profile-gear-menu" role="menu">
+                        <div class="emd-profile-gear-menu-title">Admission Settings</div>
+                        <button class="emd-profile-gear-item" role="menuitem" t-on-click="saveAdmission" t-att-disabled="state.admissionSaving">
+                          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <span><t t-if="state.admissionSaving">Saving…</t><t t-else="">Save Admission</t></span>
+                        </button>
+                      </div>
+                    </t>
+                  </div>
                 </div>
 
                 <t t-if="state.admissionErrors._form">
                   <div class="emd-admission-form-error"><t t-out="state.admissionErrors._form"/></div>
                 </t>
 
-                <form class="emd-admission-form" t-on-submit.prevent="saveAdmission">
+                <form class="emd-admission-form">
                   <!-- Student Information -->
                   <div class="em-card emd-admission-card">
                     <div class="em-section-label">Student Information</div>
@@ -581,13 +597,6 @@
                     </div>
                   </div>
 
-                  <div class="emd-admission-actions">
-                    <button type="button" class="em-btn-back emd-btn-cancel" t-on-click="cancelAdmission">Cancel</button>
-                    <button type="submit" class="em-btn-primary" t-att-disabled="state.admissionSaving">
-                      <t t-if="state.admissionSaving">Saving…</t>
-                      <t t-else="">Save Admission</t>
-                    </button>
-                  </div>
                 </form>
               </div>
             </t>
@@ -596,12 +605,38 @@
             <t t-elif="state.studentsView === 'profile' and state.selectedStudent">
               <div class="emd-profile-wrap">
 
-                <!-- Back + Hero -->
+                <!-- Back + Settings gear -->
                 <div class="emd-profile-topbar">
                   <button class="emd-btn-back" t-on-click="backToRoster">
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                     Back to Students
                   </button>
+                  <div class="emd-profile-gear-wrap">
+                    <button class="emd-profile-gear-btn"
+                            t-on-click="() => toggleSettingsMenu('profile')"
+                            t-att-aria-expanded="state.settingsMenu === 'profile'"
+                            aria-label="Student settings">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                    <t t-if="state.settingsMenu === 'profile'">
+                      <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                      <div class="emd-profile-gear-menu" role="menu" aria-label="Student settings">
+                        <div class="emd-profile-gear-menu-title">Student Settings</div>
+                        <button class="emd-profile-gear-item" role="menuitem"
+                                t-on-click="saveProfile"
+                                t-att-disabled="state.profileSaving">
+                          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <span><t t-if="state.profileSaving">Saving…</t><t t-else="">Save Changes</t></span>
+                        </button>
+                        <button class="emd-profile-gear-item danger" role="menuitem"
+                                t-on-click="deleteStudent"
+                                t-att-disabled="state.profileDeleting">
+                          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                          <span><t t-if="state.profileDeleting">Deleting…</t><t t-else="">Delete Student</t></span>
+                        </button>
+                      </div>
+                    </t>
+                  </div>
                 </div>
 
                 <div class="emd-profile-hero emd-profile-hero-v2">
@@ -687,15 +722,25 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><polyline points="15 18 9 12 15 6"/></svg>
                         Back to Receipts
                       </button>
-                      <div style="display:flex;gap:10px;margin-left:auto">
-                        <button class="emf-action-btn activate" t-on-click="printProfileReceipt">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                          Print
+                      <div class="emd-profile-gear-wrap">
+                        <button class="emd-profile-gear-btn" t-on-click="() => toggleSettingsMenu('profileReceipt')"
+                                t-att-aria-expanded="state.settingsMenu === 'profileReceipt'" aria-label="Receipt settings">
+                          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                         </button>
-                        <button class="emf-action-btn confirm" t-on-click="printProfileReceipt">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                          Download PDF
-                        </button>
+                        <t t-if="state.settingsMenu === 'profileReceipt'">
+                          <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                          <div class="emd-profile-gear-menu" role="menu">
+                            <div class="emd-profile-gear-menu-title">Receipt Settings</div>
+                            <button class="emd-profile-gear-item" role="menuitem" t-on-click="printProfileReceipt">
+                              <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                              <span>Print</span>
+                            </button>
+                            <button class="emd-profile-gear-item" role="menuitem" t-on-click="printProfileReceipt">
+                              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                              <span>Download PDF</span>
+                            </button>
+                          </div>
+                        </t>
                       </div>
                     </div>
                     <div class="emf-receipt" id="emf-profile-receipt-print">
@@ -772,47 +817,154 @@
                   </div>
                 </t>
 
-                <!-- ── Tab: Overview ────────────────────────── -->
+                <!-- ── Tab: Overview (editable) ─────────────── -->
                 <t t-elif="state.profileTab === 'overview'">
-                  <div class="emd-profile-grid">
-                    <div class="em-card emd-admission-card emd-profile-card">
+                  <t t-if="state.profileErrors._form">
+                    <div class="emd-admission-form-error"><t t-out="state.profileErrors._form"/></div>
+                  </t>
+                  <form class="emd-admission-form emd-profile-edit-form">
+                    <div class="em-card emd-admission-card">
                       <div class="em-section-label">Student Information</div>
-                      <div class="emd-profile-info-list">
-                        <div class="emd-profile-info-row"><span>Student Name</span><strong t-out="state.selectedStudent.name"/></div>
-                        <div class="emd-profile-info-row"><span>Student ID</span><strong t-out="state.selectedStudent.studentId"/></div>
-                        <div class="emd-profile-info-row"><span>Gender</span><strong t-out="formatGender(state.selectedStudent.gender)"/></div>
-                        <div class="emd-profile-info-row"><span>Date of Birth</span><strong t-out="state.selectedStudent.dob or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>Status</span><strong t-out="state.selectedStudent.statusLabel"/></div>
+                      <div class="em-grid-2">
+                        <div t-attf-class="em-field {{ state.profileErrors.name ? 'em-field-error' : '' }}">
+                          <label class="em-label em-label-required">Student Name</label>
+                          <input type="text" class="em-input" t-model="state.profileForm.name"/>
+                          <t t-if="state.profileErrors.name"><span class="em-error-msg"><t t-out="state.profileErrors.name"/></span></t>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Student Photo</label>
+                          <div class="emd-photo-upload">
+                            <t t-if="state.profileForm.photoPreview">
+                              <div class="emd-photo-preview">
+                                <img t-att-src="state.profileForm.photoPreview" alt="Student photo"/>
+                                <button type="button" class="emd-photo-remove" t-on-click="removeProfilePhoto">✕</button>
+                              </div>
+                            </t>
+                            <t t-else="">
+                              <label class="emd-photo-dropzone">
+                                <input type="file" accept="image/*" t-on-change="onProfilePhotoSelect"/>
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <span>Upload photo</span>
+                              </label>
+                            </t>
+                          </div>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Student ID</label>
+                          <input type="text" class="em-input" t-att-value="state.selectedStudent.studentId" readonly="readonly"/>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label em-label-required">Gender</label>
+                          <select class="em-select" t-model="state.profileForm.gender">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Date of Birth</label>
+                          <input type="date" class="em-input" t-model="state.profileForm.date_of_birth"/>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label em-label-required">Status</label>
+                          <select class="em-select" t-model="state.profileForm.status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="fee_due">Fee Due</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                    <div class="em-card emd-admission-card emd-profile-card">
+
+                    <div class="em-card emd-admission-card">
                       <div class="em-section-label">Academic Information</div>
-                      <div class="emd-profile-info-list">
-                        <div class="emd-profile-info-row"><span>Class</span><strong t-out="formatMany2one(state.selectedStudent.class_id)"/></div>
-                        <div class="emd-profile-info-row"><span>Section</span><strong t-out="formatMany2one(state.selectedStudent.section_id)"/></div>
-                        <div class="emd-profile-info-row"><span>Roll Number</span><strong t-out="state.selectedStudent.rollNo or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>Admission Date</span><strong t-out="state.selectedStudent.admission_date or '—'"/></div>
+                      <div class="em-grid-2">
+                        <div t-attf-class="em-field {{ state.profileErrors.class_id ? 'em-field-error' : '' }}">
+                          <label class="em-label em-label-required">Class</label>
+                          <select class="em-select" t-model="state.profileForm.class_id" t-on-change="onProfileClassChange">
+                            <option value="">Select class</option>
+                            <t t-foreach="state.classesOptions" t-as="cls" t-key="cls.id">
+                              <option t-att-value="cls.id"><t t-out="cls.name"/></option>
+                            </t>
+                          </select>
+                          <t t-if="state.profileErrors.class_id"><span class="em-error-msg"><t t-out="state.profileErrors.class_id"/></span></t>
+                        </div>
+                        <div t-attf-class="em-field {{ state.profileErrors.section_id ? 'em-field-error' : '' }}">
+                          <label class="em-label em-label-required">Section</label>
+                          <select class="em-select" t-model="state.profileForm.section_id" t-att-disabled="!state.profileForm.class_id">
+                            <option value="">Select section</option>
+                            <t t-foreach="profileSections" t-as="sec" t-key="sec.id">
+                              <option t-att-value="sec.id"><t t-out="sec.name"/></option>
+                            </t>
+                          </select>
+                          <t t-if="state.profileErrors.section_id"><span class="em-error-msg"><t t-out="state.profileErrors.section_id"/></span></t>
+                        </div>
+                        <div t-attf-class="em-field {{ state.profileErrors.admission_date ? 'em-field-error' : '' }}">
+                          <label class="em-label em-label-required">Admission Date</label>
+                          <input type="date" class="em-input" t-model="state.profileForm.admission_date"/>
+                          <t t-if="state.profileErrors.admission_date"><span class="em-error-msg"><t t-out="state.profileErrors.admission_date"/></span></t>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Roll Number</label>
+                          <input type="text" class="em-input" placeholder="e.g. 12" t-model="state.profileForm.roll_no"/>
+                        </div>
                       </div>
                     </div>
-                    <div class="em-card emd-admission-card emd-profile-card">
+
+                    <div class="em-card emd-admission-card">
                       <div class="em-section-label">Parent Information</div>
-                      <div class="emd-profile-info-list">
-                        <div class="emd-profile-info-row"><span>Father Name</span><strong t-out="state.selectedStudent.father_name or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>Mother Name</span><strong t-out="state.selectedStudent.mother_name or '—'"/></div>
+                      <div class="em-grid-2">
+                        <div class="em-field">
+                          <label class="em-label">Father Name</label>
+                          <input type="text" class="em-input" t-model="state.profileForm.father_name"/>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Mother Name</label>
+                          <input type="text" class="em-input" t-model="state.profileForm.mother_name"/>
+                        </div>
                       </div>
                     </div>
-                    <div class="em-card emd-admission-card emd-profile-card">
+
+                    <div class="em-card emd-admission-card">
                       <div class="em-section-label">Contact Information</div>
-                      <div class="emd-profile-info-list">
-                        <div class="emd-profile-info-row"><span>Mobile</span><strong t-out="state.selectedStudent.parent_phone or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>Email</span><strong t-out="state.selectedStudent.parent_email or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>Address</span><strong t-out="state.selectedStudent.address or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>City</span><strong t-out="state.selectedStudent.city or '—'"/></div>
-                        <div class="emd-profile-info-row"><span>State</span><strong t-out="formatMany2one(state.selectedStudent.state_id)"/></div>
-                        <div class="emd-profile-info-row"><span>Country</span><strong t-out="formatMany2one(state.selectedStudent.country_id)"/></div>
+                      <div class="em-grid-2">
+                        <div class="em-field">
+                          <label class="em-label">Mobile Number</label>
+                          <input type="tel" class="em-input" t-model="state.profileForm.parent_phone"/>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Email</label>
+                          <input type="email" class="em-input" t-model="state.profileForm.parent_email"/>
+                        </div>
+                        <div class="em-field em-col-span-2" style="grid-column: span 2">
+                          <label class="em-label">Address</label>
+                          <textarea class="em-input emd-textarea" rows="3" t-model="state.profileForm.address"/>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">City</label>
+                          <input type="text" class="em-input" t-model="state.profileForm.city"/>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">Country</label>
+                          <select class="em-select" t-model="state.profileForm.country_id" t-on-change="onProfileCountryChange">
+                            <option value="">Select country</option>
+                            <t t-foreach="state.countries" t-as="country" t-key="country.id">
+                              <option t-att-value="country.id"><t t-out="country.name"/></option>
+                            </t>
+                          </select>
+                        </div>
+                        <div class="em-field">
+                          <label class="em-label">State</label>
+                          <select class="em-select" t-model="state.profileForm.state_id" t-att-disabled="!state.profileForm.country_id">
+                            <option value="">Select state</option>
+                            <t t-foreach="state.states" t-as="st" t-key="st.id">
+                              <option t-att-value="st.id"><t t-out="st.name"/></option>
+                            </t>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </form>
                 </t>
 
                 <!-- ── Tab: Documents ───────────────────────── -->
@@ -823,7 +975,26 @@
                   <t t-else="">
                     <!-- Upload form -->
                     <div class="em-card emd-admission-card emd-profile-upload-card">
-                      <div class="em-section-label">Upload Document</div>
+                      <div class="emd-section-label-row">
+                        <div class="em-section-label">Upload Document</div>
+                        <div class="emd-profile-gear-wrap">
+                          <button class="emd-profile-gear-btn emd-profile-gear-btn-sm"
+                                  t-on-click="() => toggleSettingsMenu('profileDocs')"
+                                  aria-label="Document upload settings">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                          </button>
+                          <t t-if="state.settingsMenu === 'profileDocs'">
+                            <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                            <div class="emd-profile-gear-menu" role="menu">
+                              <div class="emd-profile-gear-menu-title">Document Settings</div>
+                              <button class="emd-profile-gear-item" role="menuitem" t-on-click="uploadProfileDocument" t-att-disabled="state.profileDocUploading">
+                                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <span><t t-if="state.profileDocUploading">Uploading…</t><t t-else="">Upload Document</t></span>
+                              </button>
+                            </div>
+                          </t>
+                        </div>
+                      </div>
                       <t t-if="state.profileDocErrors._form">
                         <div class="emd-class-form-error" style="margin-bottom:14px"><t t-out="state.profileDocErrors._form"/></div>
                       </t>
@@ -858,15 +1029,6 @@
                           <t t-if="state.profileDocErrors.file"><span class="emd-cf-field-error"><t t-out="state.profileDocErrors.file"/></span></t>
                         </div>
                       </div>
-                      <div style="margin-top:16px;display:flex;justify-content:flex-end">
-                        <button class="emd-cf-btn primary" t-on-click="uploadProfileDocument" t-att-disabled="state.profileDocUploading">
-                          <t t-if="state.profileDocUploading">Uploading…</t>
-                          <t t-else="">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            Upload Document
-                          </t>
-                        </button>
-                      </div>
                     </div>
 
                     <!-- Document list -->
@@ -889,10 +1051,29 @@
                               <t t-out="doc.doc_type_label"/> · <t t-out="doc.filename"/> · <t t-out="doc.upload_date"/>
                             </div>
                           </div>
-                          <div class="emd-profile-doc-actions">
-                            <button class="emf-action-btn activate" t-on-click="() => viewProfileDocument(doc.id)">View</button>
-                            <button class="emf-action-btn deactivate" t-on-click="() => downloadProfileDocument(doc.id)">Download</button>
-                            <button class="emf-action-btn revoke" t-on-click="() => deleteProfileDocument(doc.id)">Delete</button>
+                          <div class="emd-profile-doc-actions emd-profile-gear-wrap">
+                            <button class="emd-profile-gear-btn emd-profile-gear-btn-sm"
+                                    t-on-click="() => toggleSettingsMenu(settingsMenuKey('doc', doc.id))"
+                                    aria-label="Document actions">
+                              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            </button>
+                            <t t-if="state.settingsMenu === settingsMenuKey('doc', doc.id)">
+                              <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                              <div class="emd-profile-gear-menu" role="menu">
+                                <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => viewProfileDocument(doc.id)">
+                                  <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  <span>View</span>
+                                </button>
+                                <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => downloadProfileDocument(doc.id)">
+                                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                  <span>Download</span>
+                                </button>
+                                <button class="emd-profile-gear-item danger" role="menuitem" t-on-click="() => deleteProfileDocument(doc.id)">
+                                  <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </t>
                           </div>
                         </div>
                       </t>
@@ -971,9 +1152,25 @@
                             </div>
                           </div>
                           <div class="emd-profile-receipt-amt">₹<t t-out="formatCurrency(rec.amount_collected)"/></div>
-                          <div class="emd-profile-receipt-actions">
-                            <button class="emf-action-btn confirm" t-on-click="() => viewProfileReceipt(rec.id)">View</button>
-                            <button class="emf-action-btn activate" t-on-click="() => printProfileReceiptById(rec.id)">Print</button>
+                          <div class="emd-profile-receipt-actions emd-profile-gear-wrap">
+                            <button class="emd-profile-gear-btn emd-profile-gear-btn-sm"
+                                    t-on-click="() => toggleSettingsMenu(settingsMenuKey('receiptRow', rec.id))"
+                                    aria-label="Receipt actions">
+                              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            </button>
+                            <t t-if="state.settingsMenu === settingsMenuKey('receiptRow', rec.id)">
+                              <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                              <div class="emd-profile-gear-menu" role="menu">
+                                <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => viewProfileReceipt(rec.id)">
+                                  <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  <span>View</span>
+                                </button>
+                                <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => printProfileReceiptById(rec.id)">
+                                  <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                  <span>Print</span>
+                                </button>
+                              </div>
+                            </t>
                           </div>
                         </div>
                       </t>
@@ -1007,20 +1204,27 @@
                       </span>
                     </t>
                   </div>
-                  <div class="emd-class-form-actions">
-                    <t t-if="state.classForm.id">
-                      <button class="emd-cf-btn ghost" t-on-click="archiveClass">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 8v13H3V8"/><path d="M23 3H1l2 5h18l2-5z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                        Archive
-                      </button>
-                    </t>
-                    <button class="emd-cf-btn primary" t-on-click="saveClassForm" t-att-disabled="state.classFormSaving">
-                      <t t-if="state.classFormSaving">Saving…</t>
-                      <t t-else="">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
-                        Save Class
-                      </t>
+                  <div class="emd-profile-gear-wrap">
+                    <button class="emd-profile-gear-btn" t-on-click="() => toggleSettingsMenu('class')"
+                            t-att-aria-expanded="state.settingsMenu === 'class'" aria-label="Class settings">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     </button>
+                    <t t-if="state.settingsMenu === 'class'">
+                      <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                      <div class="emd-profile-gear-menu" role="menu">
+                        <div class="emd-profile-gear-menu-title">Class Settings</div>
+                        <button class="emd-profile-gear-item" role="menuitem" t-on-click="saveClassForm" t-att-disabled="state.classFormSaving">
+                          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <span><t t-if="state.classFormSaving">Saving…</t><t t-else="">Save Class</t></span>
+                        </button>
+                        <t t-if="state.classForm.id">
+                          <button class="emd-profile-gear-item danger" role="menuitem" t-on-click="archiveClass">
+                            <svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M23 3H1l2 5h18l2-5z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                            <span>Archive Class</span>
+                          </button>
+                        </t>
+                      </div>
+                    </t>
                   </div>
                 </div>
 
@@ -1110,15 +1314,37 @@
                           </span>
                           <t t-if="sec._new"><span class="emd-cf-section-badge new">New</span></t>
                         </div>
-                        <div class="emd-cf-section-actions">
-                          <button class="emd-cf-sec-btn info" t-att-disabled="!sec.id" t-on-click="() => viewStudentsForSection(sec)">View Students</button>
-                          <t t-if="!sec._archived">
-                            <button class="emd-cf-sec-btn warn" t-on-click="() => archiveSectionItem(sec._key)">Archive</button>
+                        <div class="emd-cf-section-actions emd-profile-gear-wrap">
+                          <button class="emd-profile-gear-btn emd-profile-gear-btn-sm"
+                                  t-on-click="() => toggleSettingsMenu(settingsMenuKey('section', sec._key))"
+                                  aria-label="Section actions">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                          </button>
+                          <t t-if="state.settingsMenu === settingsMenuKey('section', sec._key)">
+                            <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                            <div class="emd-profile-gear-menu" role="menu">
+                              <button class="emd-profile-gear-item" role="menuitem" t-att-disabled="!sec.id" t-on-click="() => viewStudentsForSection(sec)">
+                                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                <span>View Students</span>
+                              </button>
+                              <t t-if="!sec._archived">
+                                <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => archiveSectionItem(sec._key)">
+                                  <svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M23 3H1l2 5h18l2-5z"/></svg>
+                                  <span>Archive Section</span>
+                                </button>
+                              </t>
+                              <t t-else="">
+                                <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => restoreSection(sec._key)">
+                                  <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                  <span>Restore Section</span>
+                                </button>
+                              </t>
+                              <button class="emd-profile-gear-item danger" role="menuitem" t-on-click="() => removeSectionItem(sec._key)">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                <span>Remove Section</span>
+                              </button>
+                            </div>
                           </t>
-                          <t t-else="">
-                            <button class="emd-cf-sec-btn restore" t-on-click="() => restoreSection(sec._key)">Restore</button>
-                          </t>
-                          <button class="emd-cf-sec-btn danger" t-on-click="() => removeSectionItem(sec._key)">Remove</button>
                         </div>
                       </div>
                     </t>
@@ -1550,31 +1776,44 @@
                           <t t-else="">Inactive</t>
                         </span>
                       </div>
-                      <!-- Right: actions -->
-                      <div class="emf-struct-actions">
-                        <t t-if="struct.status === 'draft'">
-                          <button class="emf-action-btn confirm" t-on-click="() => confirmFeeStructure(struct.id)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg>
-                            Confirm &amp; Assign
-                          </button>
-                          <button class="emf-action-btn revoke" t-on-click="() => revokeFeeStructure(struct.id)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                            Delete
-                          </button>
-                        </t>
-                        <t t-elif="struct.status === 'active'">
-                          <button class="emf-action-btn deactivate" t-on-click="() => toggleFeeStructureStatus(struct.id, 'inactive')">
-                            Deactivate
-                          </button>
-                        </t>
-                        <t t-else="">
-                          <button class="emf-action-btn activate" t-on-click="() => toggleFeeStructureStatus(struct.id, 'active')">
-                            Activate
-                          </button>
-                          <button class="emf-action-btn revoke" t-on-click="() => revokeFeeStructure(struct.id)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;margin-right:4px;vertical-align:-1px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-                            Delete
-                          </button>
+                      <!-- Right: settings gear -->
+                      <div class="emf-struct-actions emd-profile-gear-wrap">
+                        <button class="emd-profile-gear-btn emd-profile-gear-btn-sm"
+                                t-on-click="() => toggleSettingsMenu(settingsMenuKey('feeStruct', struct.id))"
+                                aria-label="Fee structure settings">
+                          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        </button>
+                        <t t-if="state.settingsMenu === settingsMenuKey('feeStruct', struct.id)">
+                          <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                          <div class="emd-profile-gear-menu" role="menu">
+                            <div class="emd-profile-gear-menu-title">Structure Actions</div>
+                            <t t-if="struct.status === 'draft'">
+                              <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => confirmFeeStructure(struct.id)">
+                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Confirm &amp; Assign</span>
+                              </button>
+                              <button class="emd-profile-gear-item danger" role="menuitem" t-on-click="() => revokeFeeStructure(struct.id)">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                                <span>Delete</span>
+                              </button>
+                            </t>
+                            <t t-elif="struct.status === 'active'">
+                              <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => toggleFeeStructureStatus(struct.id, 'inactive')">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                <span>Deactivate</span>
+                              </button>
+                            </t>
+                            <t t-else="">
+                              <button class="emd-profile-gear-item" role="menuitem" t-on-click="() => toggleFeeStructureStatus(struct.id, 'active')">
+                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Activate</span>
+                              </button>
+                              <button class="emd-profile-gear-item danger" role="menuitem" t-on-click="() => revokeFeeStructure(struct.id)">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                                <span>Delete</span>
+                              </button>
+                            </t>
+                          </div>
                         </t>
                       </div>
                     </div>
@@ -1683,15 +1922,21 @@
                   <div class="emd-class-form-title-block">
                     <h2 class="emd-class-form-title">Collect Fee Payment</h2>
                   </div>
-                  <div class="emd-class-form-actions">
-                    <button class="emd-cf-btn ghost" t-on-click="cancelCollect">Cancel</button>
-                    <button class="emd-cf-btn primary" t-on-click="submitCollectFee" t-att-disabled="state.collectSaving">
-                      <t t-if="state.collectSaving">Processing…</t>
-                      <t t-else="">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
-                        Confirm Payment
-                      </t>
+                  <div class="emd-profile-gear-wrap">
+                    <button class="emd-profile-gear-btn" t-on-click="() => toggleSettingsMenu('collect')"
+                            t-att-aria-expanded="state.settingsMenu === 'collect'" aria-label="Payment settings">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     </button>
+                    <t t-if="state.settingsMenu === 'collect'">
+                      <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                      <div class="emd-profile-gear-menu" role="menu">
+                        <div class="emd-profile-gear-menu-title">Payment Settings</div>
+                        <button class="emd-profile-gear-item" role="menuitem" t-on-click="submitCollectFee" t-att-disabled="state.collectSaving">
+                          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span><t t-if="state.collectSaving">Processing…</t><t t-else="">Confirm Payment</t></span>
+                        </button>
+                      </div>
+                    </t>
                   </div>
                 </div>
 
@@ -1844,15 +2089,25 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><polyline points="15 18 9 12 15 6"/></svg>
                     Back to Fees
                   </button>
-                  <div style="display:flex;gap:10px;margin-left:auto">
-                    <button class="emf-action-btn activate" t-on-click="printReceipt">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                      Print Receipt
+                  <div class="emd-profile-gear-wrap">
+                    <button class="emd-profile-gear-btn" t-on-click="() => toggleSettingsMenu('receipt')"
+                            t-att-aria-expanded="state.settingsMenu === 'receipt'" aria-label="Receipt settings">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     </button>
-                    <button class="emf-action-btn confirm" t-on-click="printReceipt">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      Download PDF
-                    </button>
+                    <t t-if="state.settingsMenu === 'receipt'">
+                      <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                      <div class="emd-profile-gear-menu" role="menu">
+                        <div class="emd-profile-gear-menu-title">Receipt Settings</div>
+                        <button class="emd-profile-gear-item" role="menuitem" t-on-click="printReceipt">
+                          <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                          <span>Print Receipt</span>
+                        </button>
+                        <button class="emd-profile-gear-item" role="menuitem" t-on-click="printReceipt">
+                          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                          <span>Download PDF</span>
+                        </button>
+                      </div>
+                    </t>
                   </div>
                 </div>
 
@@ -1994,15 +2249,21 @@
                   <div class="emd-class-form-title-block">
                     <h2 class="emd-class-form-title">New Fee Structure</h2>
                   </div>
-                  <div class="emd-class-form-actions">
-                    <button class="emd-cf-btn ghost" t-on-click="cancelFeeStructureForm">Cancel</button>
-                    <button class="emd-cf-btn primary" t-on-click="saveFeeStructureForm" t-att-disabled="state.feeStructureSaving">
-                      <t t-if="state.feeStructureSaving">Saving…</t>
-                      <t t-else="">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
-                        Save as Draft
-                      </t>
+                  <div class="emd-profile-gear-wrap">
+                    <button class="emd-profile-gear-btn" t-on-click="() => toggleSettingsMenu('feeForm')"
+                            t-att-aria-expanded="state.settingsMenu === 'feeForm'" aria-label="Fee structure settings">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     </button>
+                    <t t-if="state.settingsMenu === 'feeForm'">
+                      <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                      <div class="emd-profile-gear-menu" role="menu">
+                        <div class="emd-profile-gear-menu-title">Structure Settings</div>
+                        <button class="emd-profile-gear-item" role="menuitem" t-on-click="saveFeeStructureForm" t-att-disabled="state.feeStructureSaving">
+                          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <span><t t-if="state.feeStructureSaving">Saving…</t><t t-else="">Save as Draft</t></span>
+                        </button>
+                      </div>
+                    </t>
                   </div>
                 </div>
 
@@ -2171,6 +2432,23 @@
             <div class="emd-panel">
               <div class="emd-panel-header">
                 <span class="emd-panel-title">System &amp; General Settings</span>
+                <div class="emd-profile-gear-wrap">
+                  <button class="emd-profile-gear-btn emd-profile-gear-btn-sm"
+                          t-on-click="() => toggleSettingsMenu('settings')"
+                          aria-label="Settings actions">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  </button>
+                  <t t-if="state.settingsMenu === 'settings'">
+                    <div class="emd-profile-gear-backdrop" t-on-click="closeSettingsMenu"/>
+                    <div class="emd-profile-gear-menu" role="menu">
+                      <div class="emd-profile-gear-menu-title">Settings Actions</div>
+                      <button class="emd-profile-gear-item" role="menuitem" t-on-click="closeSettingsMenu">
+                        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <span>Save Changes</span>
+                      </button>
+                    </div>
+                  </t>
+                </div>
               </div>
               <div class="emd-panel-body">
                 <div style="display: grid; gap: 16px; margin-top: 12px; max-width: 500px;">
@@ -2185,7 +2463,6 @@
                       <span>Send daily attendance digests to admin</span>
                     </div>
                   </div>
-                  <button class="emd-action-btn" style="margin-top: 12px; align-self: flex-start;">Save Changes</button>
                 </div>
               </div>
             </div>

@@ -128,6 +128,57 @@ function emptyDocumentForm() {
   };
 }
 
+function profileFormFromStudent(student) {
+  if (!student) {
+    return {
+      name: "",
+      photoPreview: null,
+      photoB64: null,
+      gender: "male",
+      date_of_birth: "",
+      class_id: "",
+      section_id: "",
+      admission_date: "",
+      roll_no: "",
+      father_name: "",
+      mother_name: "",
+      parent_phone: "",
+      parent_email: "",
+      address: "",
+      city: "",
+      state_id: "",
+      country_id: "",
+      status: "active",
+    };
+  }
+  let photoPreview = null;
+  if (student.photo) {
+    photoPreview = typeof student.photo === "string" && student.photo.startsWith("data:")
+      ? student.photo
+      : `data:image/png;base64,${student.photo}`;
+  }
+  return {
+    name: student.name || "",
+    photoPreview,
+    photoB64: null,
+    gender: student.gender || "male",
+    date_of_birth: student.dob || "",
+    class_id: student.class_id ? String(student.class_id[0]) : "",
+    section_id: student.section_id ? String(student.section_id[0]) : "",
+    admission_date: student.admission_date || "",
+    roll_no: student.rollNo || "",
+    father_name: student.father_name || "",
+    mother_name: student.mother_name || "",
+    parent_phone: student.parent_phone || "",
+    parent_email: student.parent_email || "",
+    address: student.address || "",
+    city: student.city || "",
+    state_id: student.state_id ? String(student.state_id[0]) : "",
+    country_id: student.country_id ? String(student.country_id[0]) : "",
+    status: student.status || "active",
+  };
+}
+
 function formatCurrency(amount) {
   return Number(amount || 0).toLocaleString("en-IN");
 }
@@ -233,6 +284,11 @@ export class EduManageDashboard extends Component {
       profileDocUploading: false,
       profileDocErrors: {},
       profileTabLoading: false,
+      profileForm: profileFormFromStudent(null),
+      profileErrors: {},
+      profileSaving: false,
+      profileDeleting: false,
+      settingsMenu: null,
       studentFilter: "all",
       studentSearch: "",
       students: STUDENTS_DATA.map(mapStudentInitials),
@@ -299,6 +355,15 @@ export class EduManageDashboard extends Component {
     this.printProfileReceiptById = this.printProfileReceiptById.bind(this);
     this.backFromProfileReceipt  = this.backFromProfileReceipt.bind(this);
     this.printProfileReceipt     = this.printProfileReceipt.bind(this);
+    this.saveProfile              = this.saveProfile.bind(this);
+    this.deleteStudent            = this.deleteStudent.bind(this);
+    this.onProfileClassChange     = this.onProfileClassChange.bind(this);
+    this.onProfileCountryChange   = this.onProfileCountryChange.bind(this);
+    this.onProfilePhotoSelect     = this.onProfilePhotoSelect.bind(this);
+    this.removeProfilePhoto       = this.removeProfilePhoto.bind(this);
+    this.toggleSettingsMenu       = this.toggleSettingsMenu.bind(this);
+    this.closeSettingsMenu        = this.closeSettingsMenu.bind(this);
+    this.settingsMenuKey          = this.settingsMenuKey.bind(this);
     this.onAdmissionClassChange = this.onAdmissionClassChange.bind(this);
     this.onAdmissionCountryChange = this.onAdmissionCountryChange.bind(this);
     this.onPhotoSelect      = this.onPhotoSelect.bind(this);
@@ -434,10 +499,34 @@ export class EduManageDashboard extends Component {
       );
       if (profile) {
         this.state.selectedStudent = mapStudentInitials(profile);
+        this._populateProfileForm(this.state.selectedStudent);
       }
     } catch (_) {
       this.state.selectedStudent = this.state.students.find(s => s.id === studentId) || null;
+      if (this.state.selectedStudent) {
+        this._populateProfileForm(this.state.selectedStudent);
+      }
     }
+  }
+
+  _populateProfileForm(student) {
+    this.state.profileForm = profileFormFromStudent(student);
+    this.state.profileErrors = {};
+    this.state.profileSaving = false;
+    this.state.profileDeleting = false;
+    this.state.settingsMenu = null;
+  }
+
+  settingsMenuKey(prefix, id) {
+    return `${prefix}-${id}`;
+  }
+
+  toggleSettingsMenu(menuKey) {
+    this.state.settingsMenu = this.state.settingsMenu === menuKey ? null : menuKey;
+  }
+
+  closeSettingsMenu() {
+    this.state.settingsMenu = null;
   }
 
   async _loadProfileTabData(tab) {
@@ -642,6 +731,7 @@ export class EduManageDashboard extends Component {
       return;
     }
     this.state.activeNav = id;
+    this.closeSettingsMenu();
     if (id === "dashboard") {
       this._loadDashboard();
     }
@@ -704,6 +794,119 @@ export class EduManageDashboard extends Component {
     return cls?.sections || [];
   }
 
+  get profileSections() {
+    const classId = parseInt(this.state.profileForm.class_id, 10);
+    if (!classId) return [];
+    const cls = this.state.classesOptions.find(c => c.id === classId);
+    return cls?.sections || [];
+  }
+
+  onProfileClassChange() {
+    this.state.profileForm.section_id = "";
+  }
+
+  async onProfileCountryChange() {
+    this.state.profileForm.state_id = "";
+    await this._loadStates(this.state.profileForm.country_id);
+  }
+
+  onProfilePhotoSelect(ev) {
+    const file = ev.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.state.profileForm.photoPreview = e.target.result;
+      this.state.profileForm.photoB64 = e.target.result.split(",")[1];
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeProfilePhoto() {
+    this.state.profileForm.photoPreview = null;
+    this.state.profileForm.photoB64 = null;
+  }
+
+  _validateProfile() {
+    const form = this.state.profileForm;
+    const errors = {};
+    if (!form.name?.trim()) errors.name = "Student name is required";
+    if (!form.class_id) errors.class_id = "Class is required";
+    if (!form.section_id) errors.section_id = "Section is required";
+    if (!form.admission_date) errors.admission_date = "Admission date is required";
+    this.state.profileErrors = errors;
+    return Object.keys(errors).length === 0;
+  }
+
+  async saveProfile() {
+    if (!this._validateProfile() || this.state.profileSaving || !this.state.selectedStudentId) return;
+    this.state.profileSaving = true;
+    this.closeSettingsMenu();
+    const form = this.state.profileForm;
+    const vals = {
+      name: form.name.trim(),
+      gender: form.gender,
+      class_id: parseInt(form.class_id, 10),
+      section_id: parseInt(form.section_id, 10),
+      admission_date: form.admission_date,
+      status: form.status,
+      roll_no: form.roll_no || "",
+      father_name: form.father_name || "",
+      mother_name: form.mother_name || "",
+      parent_phone: form.parent_phone || "",
+      parent_email: form.parent_email || "",
+      address: form.address || "",
+      city: form.city || "",
+      date_of_birth: form.date_of_birth || "",
+      state_id: form.state_id || "",
+      country_id: form.country_id || "",
+    };
+    if (form.photoB64) vals.photo = form.photoB64;
+    try {
+      const updated = await this.orm.call(
+        "edumanage.student", "save_student_profile",
+        [this.state.selectedStudentId, vals]
+      );
+      if (updated) {
+        this.state.selectedStudent = mapStudentInitials(updated);
+        this._populateProfileForm(this.state.selectedStudent);
+        await this._loadStudents();
+        await this._loadDashboard();
+      }
+      this.state.profileSaving = false;
+    } catch (err) {
+      this.state.profileSaving = false;
+      this.state.profileErrors = {
+        _form: err.message || err.data?.message || "Could not save changes. Please try again.",
+      };
+    }
+  }
+
+  async deleteStudent() {
+    if (this.state.profileDeleting || !this.state.selectedStudentId) return;
+    const name = this.state.selectedStudent?.name || "this student";
+    if (!window.confirm(`Delete ${name}? This will permanently remove the student and all related fee records.`)) {
+      return;
+    }
+    this.closeSettingsMenu();
+    this.state.profileDeleting = true;
+    try {
+      const result = await this.orm.call(
+        "edumanage.student", "delete_student_record", [this.state.selectedStudentId]
+      );
+      if (result?.success === false) {
+        throw new Error(result.message || "Delete failed.");
+      }
+      await this._loadStudents();
+      await this._loadDashboard();
+      this.backToRoster();
+    } catch (err) {
+      this.state.profileErrors = {
+        _form: err.message || err.data?.message || "Could not delete student. Please try again.",
+      };
+    }
+    this.state.profileDeleting = false;
+  }
+
   getStudentFilters() {
     let list = this.state.students;
     if (this.state.filterClassId) {
@@ -756,6 +959,7 @@ export class EduManageDashboard extends Component {
     this.state.selectedStudentId = null;
     this.state.selectedStudent = null;
     this.state.admissionErrors = {};
+    this.state.settingsMenu = null;
     router.pushState({
       activeNav: "students",
       studentsView: "roster",
@@ -775,7 +979,12 @@ export class EduManageDashboard extends Component {
     this.state.profileReceipt = null;
     this.state.profileDocForm = emptyDocumentForm();
     this.state.profileDocErrors = {};
+    this.state.settingsMenu = null;
+    await this._loadAdmissionOptions();
     await this._loadStudentProfile(studentId);
+    if (this.state.profileForm.country_id) {
+      await this._loadStates(this.state.profileForm.country_id);
+    }
     this._pushStudentsRoute({ studentsView: "profile", studentId });
   }
 
@@ -865,6 +1074,7 @@ export class EduManageDashboard extends Component {
 
   async saveClassForm() {
     if (!this._validateClassForm() || this.state.classFormSaving) return;
+    this.closeSettingsMenu();
     this.state.classFormSaving = true;
     const f = this.state.classForm;
     const vals = {
@@ -898,6 +1108,7 @@ export class EduManageDashboard extends Component {
 
   async archiveClass() {
     if (!this.state.classForm.id) return;
+    this.closeSettingsMenu();
     try {
       await this.orm.call('edumanage.class', 'archive_class_record', [this.state.classForm.id]);
       this.cancelClassForm();
@@ -931,6 +1142,7 @@ export class EduManageDashboard extends Component {
   }
 
   removeSectionItem(key) {
+    this.closeSettingsMenu();
     const sec = this.state.classForm.sections.find(s => s._key === key);
     if (!sec) return;
     if (sec._new) {
@@ -941,11 +1153,13 @@ export class EduManageDashboard extends Component {
   }
 
   archiveSectionItem(key) {
+    this.closeSettingsMenu();
     const sec = this.state.classForm.sections.find(s => s._key === key);
     if (sec) { sec._archived = true; sec.status = 'archived'; }
   }
 
   restoreSection(key) {
+    this.closeSettingsMenu();
     const sec = this.state.classForm.sections.find(s => s._key === key);
     if (sec) { sec._archived = false; sec.status = 'active'; }
   }
@@ -963,6 +1177,7 @@ export class EduManageDashboard extends Component {
 
   async saveAdmission() {
     if (!this._validateAdmission() || this.state.admissionSaving) return;
+    this.closeSettingsMenu();
     this.state.admissionSaving = true;
     const form = this.state.admissionForm;
     const vals = {
@@ -1030,6 +1245,7 @@ export class EduManageDashboard extends Component {
   }
 
   async uploadProfileDocument() {
+    this.closeSettingsMenu();
     const form = this.state.profileDocForm;
     const errors = {};
     if (!form.name?.trim()) errors.name = "Document name is required.";
@@ -1109,6 +1325,7 @@ export class EduManageDashboard extends Component {
   }
 
   async deleteProfileDocument(docId) {
+    this.closeSettingsMenu();
     try {
       await this.orm.call("edumanage.student.document", "delete_student_document", [docId]);
       await this._loadProfileTabData("documents");
@@ -1160,6 +1377,7 @@ export class EduManageDashboard extends Component {
 
   viewStudentsForSection(sec) {
     if (!sec.id) return;
+    this.closeSettingsMenu();
     this.state.activeNav = "students";
     this.state.studentsSubTab = "roster";
     this.state.studentsView = "roster";
@@ -1251,6 +1469,7 @@ export class EduManageDashboard extends Component {
     this.state.feeStructureErrors = errors;
     if (Object.keys(errors).length > 0) return;
 
+    this.closeSettingsMenu();
     this.state.feeStructureSaving = true;
     try {
       const vals = {
@@ -1271,6 +1490,7 @@ export class EduManageDashboard extends Component {
   }
 
   async confirmFeeStructure(id) {
+    this.closeSettingsMenu();
     try {
       await this.orm.call("edumanage.fee.structure", "action_confirm", [id]);
       await this._loadFeesData();
@@ -1280,6 +1500,7 @@ export class EduManageDashboard extends Component {
   }
 
   async revokeFeeStructure(id) {
+    this.closeSettingsMenu();
     try {
       await this.orm.call("edumanage.fee.structure", "action_revoke", [id]);
       await this._loadFeesData();
@@ -1289,6 +1510,7 @@ export class EduManageDashboard extends Component {
   }
 
   async toggleFeeStructureStatus(id, newStatus) {
+    this.closeSettingsMenu();
     try {
       await this.orm.write("edumanage.fee.structure", [id], { status: newStatus });
       await this._loadFeesData();
@@ -1367,6 +1589,7 @@ export class EduManageDashboard extends Component {
 
   async submitCollectFee() {
     if (!this._validateCollect() || this.state.collectSaving) return;
+    this.closeSettingsMenu();
     this.state.collectSaving = true;
     const f = this.state.collectForm;
     const vals = {
