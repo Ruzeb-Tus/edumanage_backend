@@ -51,13 +51,17 @@
     <div class="emd-main">
 
       <header class="emd-header">
-        <span class="emd-header-title"><t t-out="activeTitle"/></span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <h1 class="emd-header-title" style="margin:0;font-size:20px;letter-spacing:-0.3px;"><t t-out="activeTitle"/></h1>
+          <span style="color:var(--em-slate-300);">|</span>
+          <span style="font-size:13px;font-weight:600;color:var(--em-slate-500);"><t t-out="state.institutionName"/></span>
+        </div>
         <div class="emd-search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Search students, fees, classes…"/>
         </div>
         <div class="emd-header-actions">
-          <div class="emd-icon-btn">
+          <div class="emd-icon-btn" aria-label="Notifications">
             <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span class="emd-notif-dot"/>
           </div>
@@ -70,154 +74,334 @@
 
           <!-- ══ DASHBOARD TAB ════════════════════════════════ -->
           <t t-if="state.activeNav === 'dashboard'">
-            <!-- Greeting Hero -->
-            <div class="emd-greeting">
-              <div class="emd-greeting-left">
-                <h1 class="emd-greeting-name"><t t-out="state.greetText"/>, <t t-out="state.userName"/></h1>
-                <p class="emd-greeting-inst"><t t-out="state.institutionName"/></p>
-                <p class="emd-greeting-date"><t t-out="state.dateCaps"/></p>
-                <p class="emd-greeting-quote"><t t-out="state.dailyQuote"/></p>
-              </div>
-              <div class="emd-greeting-right">
-                <div class="emd-greeting-deco"/>
-              </div>
-            </div>
+            <div class="emd-dash" role="main" aria-label="School dashboard">
 
-            <!-- Alert Strip -->
-            <t t-if="state.showAlert">
-              <div class="emd-alert-strip">
-                <div class="emd-alert-strip-items">
-                  <div class="emd-alert-item">3 student birthdays today — Arjun, Priya, Meenal</div>
-                  <div class="emd-alert-item">Fee deadline in 2 days — 47 students pending</div>
-                  <div class="emd-alert-item">2 admission forms awaiting review</div>
-                </div>
-                <button class="emd-alert-dismiss" t-on-click="dismissAlert">✕</button>
-              </div>
-            </t>
-
-            <!-- Metric Cards -->
-            <div class="emd-metrics">
-              <t t-foreach="metrics" t-as="m" t-key="m.id">
-                <div t-attf-class="emd-metric-card accent-{{ m.accent }} {{ m.critical ? 'critical' : '' }}">
-                  <div class="emd-metric-top">
-                    <div class="emd-metric-icon-wrap">
-                      <svg viewBox="0 0 24 24"><t t-out="m.iconPath"/></svg>
-                    </div>
-                  </div>
-                  <div class="emd-metric-value-row">
-                    <t t-if="m.prefix">
-                      <span class="emd-metric-prefix"><t t-out="m.prefix"/></span>
+              <div class="emd-greeting emd-greeting-compact">
+                <div class="emd-greeting-left">
+                  <h1 class="emd-greeting-name">
+                    <t t-if="state.greetText === 'Welcome to EduManage'">
+                      <t t-out="state.greetText"/>
                     </t>
-                    <span class="emd-metric-value"><t t-out="m.value"/></span>
-                  </div>
-                  <div class="emd-metric-label"><t t-out="m.label"/></div>
-                  <t t-if="m.trend">
-                    <div class="emd-metric-divider"/>
-                    <div t-attf-class="emd-metric-note {{ m.trendWarn ? 'warn' : '' }}">
-                      <t t-out="m.trend"/>
-                    </div>
+                    <t t-else="">
+                      <t t-out="state.greetText"/>, <t t-out="state.userName"/>
+                    </t>
+                  </h1>
+                  <p class="emd-greeting-inst"><t t-out="state.institutionName"/></p>
+                  <p class="emd-greeting-date"><t t-out="state.dateCaps"/></p>
+                </div>
+              </div>
+
+              <div class="emd-dash-top">
+                <div class="emd-dash-quick" role="toolbar" aria-label="Quick actions">
+                  <button class="emd-dash-action primary" t-on-click="() => dashboardQuickAction('add_student')" aria-label="Add Student">
+                    <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    Add Student
+                  </button>
+                  <button class="emd-dash-action" t-on-click="() => dashboardQuickAction('collect_fee')" aria-label="Collect Fee">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Collect Fee
+                  </button>
+                  <button class="emd-dash-action" t-on-click="() => dashboardQuickAction('mark_attendance')" aria-label="Mark Attendance">
+                    <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Mark Attendance
+                  </button>
+                  <button class="emd-dash-action" t-on-click="() => dashboardQuickAction('upload_document')" aria-label="Upload Document">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload Document
+                  </button>
+                  <button class="emd-dash-action" t-on-click="() => dashboardQuickAction('approve_admission')" aria-label="Approve Admission">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    Approve Admission
+                  </button>
+                </div>
+              </div>
+
+              <t t-if="state.dashboard.alerts.length > 0 and state.showAlert">
+                <div class="emd-dash-alerts" role="region" aria-label="Alerts and reminders">
+                  <t t-foreach="state.dashboard.alerts" t-as="alert" t-key="alert.id">
+                    <button t-attf-class="emd-dash-alert {{ alert.type }}"
+                            t-on-click="() => onDashboardAlert(alert)"
+                            t-att-aria-label="alert.text">
+                      <span class="emd-dash-alert-text"><t t-out="alert.text"/></span>
+                      <span class="emd-dash-alert-action">View →</span>
+                    </button>
                   </t>
+                  <button class="emd-alert-dismiss" t-on-click="dismissAlert" aria-label="Dismiss alerts">✕</button>
                 </div>
               </t>
-            </div>
 
-            <!-- Quick Actions -->
-            <p class="emd-section-title">Quick Actions</p>
-            <div class="emd-quick-actions">
-              <button class="emd-action-btn" t-on-click="() => setNav('students')">
-                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Student
-              </button>
-              <button class="emd-action-btn" t-on-click="() => setNav('attendance')">
-                <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                Mark Attendance
-              </button>
-              <button class="emd-action-btn" t-on-click="() => setNav('fees')">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Collect Fees
-              </button>
-              <button class="emd-action-btn" t-on-click="() => setNav('reports')">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                View Reports
-              </button>
-              <button class="emd-action-btn" t-on-click="() => setNav('documents')">
-                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Upload Documents
-              </button>
-            </div>
-
-            <!-- Shortcuts -->
-            <p class="emd-section-title">Shortcuts</p>
-            <div class="emd-shortcuts">
-              <t t-foreach="shortcuts" t-as="sc" t-key="sc.id">
-                <div class="emd-shortcut" t-on-click="() => setNav(sc.id)">
-                  <div class="emd-shortcut-icon">
-                    <svg viewBox="0 0 24 24"><t t-out="sc.iconPath"/></svg>
-                  </div>
-                  <div class="emd-shortcut-name"><t t-out="sc.label"/></div>
-                  <div class="emd-shortcut-desc"><t t-out="sc.desc"/></div>
-                </div>
+              <t t-if="state.dashboardLoading">
+                <div class="emd-dash-loading">Loading dashboard…</div>
               </t>
-            </div>
+              <t t-else="">
+                <div class="emd-dash-kpis" role="region" aria-label="Key metrics">
+                  <button class="emd-dash-kpi" t-on-click="() => onKpiClick('students')" aria-label="Total Students">
+                    <div class="emd-dash-kpi-icon blue">
+                      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="emd-dash-kpi-body">
+                      <div class="emd-dash-kpi-val"><t t-out="dashboardKpis.total_students"/></div>
+                      <div class="emd-dash-kpi-lbl">Total Students</div>
+                      <div class="emd-dash-kpi-sub">Active enrolled</div>
+                    </div>
+                  </button>
+                  <button class="emd-dash-kpi" t-on-click="() => onKpiClick('classes')" aria-label="Total Classes">
+                    <div class="emd-dash-kpi-icon slate">
+                      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    </div>
+                    <div class="emd-dash-kpi-body">
+                      <div class="emd-dash-kpi-val"><t t-out="dashboardKpis.total_classes"/></div>
+                      <div class="emd-dash-kpi-lbl">Classes</div>
+                      <div class="emd-dash-kpi-sub"><t t-out="dashboardKpis.total_sections"/> sections</div>
+                    </div>
+                  </button>
+                  <button t-attf-class="emd-dash-kpi {{ dashboardKpis.attendance_pct >= 90 ? 'status-good' : 'status-warn' }}"
+                          t-on-click="() => onKpiClick('attendance')" aria-label="Attendance Today">
+                    <div t-attf-class="emd-dash-kpi-icon {{ dashboardKpis.attendance_pct >= 90 ? 'green' : 'amber' }}">
+                      <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                    <div class="emd-dash-kpi-body">
+                      <div class="emd-dash-kpi-val"><t t-out="dashboardKpis.attendance_pct"/>%</div>
+                      <div class="emd-dash-kpi-lbl">Attendance Today</div>
+                      <div class="emd-dash-kpi-sub"><t t-out="dashboardKpis.attendance_present"/>/<t t-out="dashboardKpis.attendance_total"/> present</div>
+                    </div>
+                  </button>
+                  <button class="emd-dash-kpi" t-on-click="() => onKpiClick('admissions')" aria-label="New Admissions">
+                    <div class="emd-dash-kpi-icon green">
+                      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    </div>
+                    <div class="emd-dash-kpi-body">
+                      <div class="emd-dash-kpi-val"><t t-out="dashboardKpis.new_admissions_month"/></div>
+                      <div class="emd-dash-kpi-lbl">New Admissions</div>
+                      <div class="emd-dash-kpi-sub">+<t t-out="dashboardKpis.new_admissions_week"/> this week</div>
+                    </div>
+                  </button>
+                  <button class="emd-dash-kpi status-good" t-on-click="() => onKpiClick('fees_collected')" aria-label="Fees Collected Today">
+                    <div class="emd-dash-kpi-icon green">
+                      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="emd-dash-kpi-body">
+                      <div class="emd-dash-kpi-val">₹<t t-out="formatCurrency(dashboardKpis.fees_collected_today)"/></div>
+                      <div class="emd-dash-kpi-lbl">Collected Today</div>
+                      <div class="emd-dash-kpi-sub">Fee payments</div>
+                    </div>
+                  </button>
+                  <button t-attf-class="emd-dash-kpi {{ dashboardKpis.fees_overdue_count > 0 ? 'status-bad' : '' }}"
+                          t-on-click="() => onKpiClick('fees_pending')" aria-label="Pending Fees">
+                    <div t-attf-class="emd-dash-kpi-icon {{ dashboardKpis.fees_overdue_count > 0 ? 'red' : 'amber' }}">
+                      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    </div>
+                    <div class="emd-dash-kpi-body">
+                      <div class="emd-dash-kpi-val">₹<t t-out="formatCurrency(dashboardKpis.fees_pending_amount)"/></div>
+                      <div class="emd-dash-kpi-lbl">Pending Fees</div>
+                      <div class="emd-dash-kpi-sub"><t t-out="dashboardKpis.fees_pending_count"/> students</div>
+                    </div>
+                  </button>
+                </div>
 
-            <!-- Focus + Activity -->
-            <div class="emd-three-col">
-              <div class="emd-panel">
-                <div class="emd-panel-header">
-                  <span class="emd-panel-title">Today's Focus</span>
-                </div>
-                <div class="emd-panel-body">
-                  <div class="emd-focus-item" t-on-click="() => setNav('fees')">
-                    <div class="emd-focus-dot warn"/>
-                    <div class="emd-focus-text">
-                      <div class="emd-focus-label">Fees Due Today</div>
-                      <div class="emd-focus-sub">₹48,500 across 12 students</div>
+                <div class="emd-dash-mid">
+                  <div class="emd-panel emd-dash-chart-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title">Attendance Trend</span>
+                      <span class="emd-panel-sub">Last 7 days</span>
+                      <button class="emd-view-link" t-on-click="() => setNav('attendance')">View all →</button>
                     </div>
-                    <span class="emd-focus-badge warn">12</span>
-                    <span class="emd-view-link">View →</span>
-                  </div>
-                  <div class="emd-focus-item" t-on-click="() => setNav('fees')">
-                    <div class="emd-focus-dot warn"/>
-                    <div class="emd-focus-text">
-                      <div class="emd-focus-label">Overdue Fees</div>
-                      <div class="emd-focus-sub">Students with dues &gt; 30 days</div>
-                    </div>
-                    <span class="emd-focus-badge warn">8</span>
-                    <span class="emd-view-link">View →</span>
-                  </div>
-                  <div class="emd-focus-item" t-on-click="() => setNav('attendance')">
-                    <div class="emd-focus-dot"/>
-                    <div class="emd-focus-text">
-                      <div class="emd-focus-label">Attendance Unmarked</div>
-                      <div class="emd-focus-sub">3 classes not yet marked</div>
-                    </div>
-                    <span class="emd-focus-badge">3</span>
-                    <span class="emd-view-link">Mark →</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="emd-panel">
-                <div class="emd-panel-header">
-                  <span class="emd-panel-title">
-                    <span class="emd-live-dot"/>
-                    Live Activity
-                  </span>
-                </div>
-                <div class="emd-panel-body">
-                  <ul class="emd-feed">
-                    <t t-foreach="activityFeed" t-as="act" t-key="act.id">
-                      <li class="emd-feed-item">
-                        <div t-attf-class="emd-feed-dot {{ act.color }}"/>
-                        <div class="emd-feed-body">
-                          <div class="emd-feed-title"><t t-out="act.title"/></div>
-                          <div class="emd-feed-meta"><t t-out="act.meta"/></div>
+                    <div class="emd-panel-body">
+                      <t t-if="state.dashboard.attendance_trend.length === 0">
+                        <div class="emd-dash-empty-state">
+                          <div class="emd-empty-icon">
+                            <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                          </div>
+                          <p class="emd-empty-text">Attendance will appear here once you mark your first class.</p>
+                          <button class="emd-empty-cta" t-on-click="() => dashboardQuickAction('mark_attendance')">Mark Attendance →</button>
                         </div>
-                      </li>
-                    </t>
-                  </ul>
+                      </t>
+                      <div class="emd-dash-chart" role="img" aria-label="Attendance trend chart">
+                        <t t-foreach="state.dashboard.attendance_trend" t-as="pt" t-key="pt.date">
+                          <div class="emd-dash-bar-col" t-att-title="pt.date + ': ' + pt.pct + '% (' + pt.present + ' present)'">
+                            <div class="emd-dash-bar-track">
+                              <div class="emd-dash-bar fill-blue" t-attf-style="height: {{ pt.pct }}%"/>
+                            </div>
+                            <span class="emd-dash-bar-lbl"><t t-out="pt.label"/></span>
+                          </div>
+                        </t>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="emd-panel emd-dash-chart-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title">Fee Collection</span>
+                      <span class="emd-panel-sub">Last 7 days</span>
+                      <button class="emd-view-link" t-on-click="() => setNav('fees')">View all →</button>
+                    </div>
+                    <div class="emd-panel-body">
+                      <t t-if="state.dashboard.fee_trend.length === 0">
+                        <div class="emd-dash-empty-state">
+                          <div class="emd-empty-icon">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                          </div>
+                          <p class="emd-empty-text">Fee collections will appear here once you record your first payment.</p>
+                          <button class="emd-empty-cta" t-on-click="() => dashboardQuickAction('collect_fee')">Collect First Payment →</button>
+                        </div>
+                      </t>
+                      <div class="emd-dash-chart" role="img" aria-label="Fee collection trend chart">
+                        <t t-foreach="state.dashboard.fee_trend" t-as="ft" t-key="ft.date">
+                          <div class="emd-dash-bar-col" t-att-title="ft.date + ': ₹' + formatCurrency(ft.collected)">
+                            <div class="emd-dash-bar-track">
+                              <div class="emd-dash-bar fill-green" t-attf-style="height: {{ feeBarHeight(ft.collected) }}%"/>
+                            </div>
+                            <span class="emd-dash-bar-lbl"><t t-out="ft.label"/></span>
+                          </div>
+                        </t>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="emd-panel emd-dash-side-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title">Class Summary</span>
+                      <button class="emd-view-link" t-on-click="() => { setNav('students'); setStudentsSubTab('classes'); }">Manage →</button>
+                    </div>
+                    <div class="emd-panel-body">
+                      <t t-if="state.dashboard.class_summary.length === 0">
+                        <div class="emd-dash-empty-state">
+                          <div class="emd-empty-icon">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                          </div>
+                          <p class="emd-empty-text">No classes configured. Set up your first class to get started.</p>
+                        </div>
+                      </t>
+                      <t t-foreach="state.dashboard.class_summary" t-as="cls" t-key="cls.id">
+                        <button class="emd-dash-class-row" t-on-click="() => onClassSummaryClick(cls.id)">
+                          <span class="emd-dash-class-name"><t t-out="cls.name"/></span>
+                          <span class="emd-dash-class-meta"><t t-out="cls.students"/> students · <t t-out="cls.sections"/> sec</span>
+                        </button>
+                      </t>
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                <div class="emd-dash-bottom">
+                  <div class="emd-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title">Overdue Fees</span>
+                      <button class="emd-view-link" t-on-click="() => { setNav('fees'); state.activeFeesSubTab = 'pending'; state.feeFilter = 'overdue'; }">View all →</button>
+                    </div>
+                    <div class="emd-panel-body">
+                      <t t-if="state.dashboard.overdue_fees.length === 0">
+                        <div class="emd-dash-empty-state">
+                          <div class="emd-empty-icon" style="background:rgba(58,107,71,0.1);">
+                            <svg viewBox="0 0 24 24" style="stroke:#3a6b47;"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <p class="emd-empty-text">All caught up! No overdue payments.</p>
+                        </div>
+                      </t>
+                      <t t-else="">
+                        <div class="emd-dash-table">
+                          <div class="emd-dash-table-head">
+                            <span>Student</span><span>Class</span><span>Due</span><span>Days</span><span>Action</span>
+                          </div>
+                          <t t-foreach="state.dashboard.overdue_fees" t-as="of" t-key="of.id">
+                            <div class="emd-dash-table-row">
+                              <button class="emd-dash-td-link" t-on-click="() => openStudentProfile(of.student_id)"><t t-out="of.student_name"/></button>
+                              <span><t t-out="of.class_name"/><t t-if="of.section_name"> · <t t-out="of.section_name"/></t></span>
+                              <span class="emd-dash-td-amt">₹<t t-out="formatCurrency(of.amount_due)"/></span>
+                              <span t-attf-class="emd-dash-td-days {{ of.days_overdue > 30 ? 'critical' : '' }}"><t t-out="of.days_overdue"/>d</span>
+                              <button class="emd-dash-td-btn" t-on-click="() => { setNav('fees'); openCollectFee(of.id); }">Collect</button>
+                            </div>
+                          </t>
+                        </div>
+                      </t>
+                    </div>
+                  </div>
+
+                  <div class="emd-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title"><span class="emd-live-dot"/> Live Activity</span>
+                    </div>
+                    <div class="emd-panel-body">
+                      <t t-if="dashboardActivity.length === 0">
+                        <div class="emd-dash-empty-state">
+                          <div class="emd-empty-icon">
+                            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                          </div>
+                          <p class="emd-empty-text">No recent activity yet. Actions will show up here as you use EduManage.</p>
+                        </div>
+                      </t>
+                      <ul class="emd-feed">
+                        <t t-foreach="dashboardActivity" t-as="act" t-key="act.id">
+                          <li class="emd-feed-item">
+                            <div t-attf-class="emd-feed-dot {{ act.color }}"/>
+                            <div class="emd-feed-body">
+                              <div class="emd-feed-title"><t t-out="act.title"/></div>
+                              <div class="emd-feed-meta"><t t-out="act.meta"/></div>
+                            </div>
+                          </li>
+                        </t>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="emd-dash-bottom">
+                  <div class="emd-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title">Pending Admissions</span>
+                      <button class="emd-view-link" t-on-click="() => setNav('students')">View all →</button>
+                    </div>
+                    <div class="emd-panel-body">
+                      <t t-if="state.dashboard.pending_admissions.length === 0">
+                        <div class="emd-dash-empty-state">
+                          <div class="emd-empty-icon" style="background:rgba(58,107,71,0.1);">
+                            <svg viewBox="0 0 24 24" style="stroke:#3a6b47;"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <p class="emd-empty-text">No pending admissions. You're all caught up!</p>
+                        </div>
+                      </t>
+                      <t t-else="">
+                        <div class="emd-dash-table emd-dash-table-adm">
+                          <div class="emd-dash-table-head">
+                            <span>Student</span><span>Class</span><span>Date</span><span>Action</span>
+                          </div>
+                          <t t-foreach="state.dashboard.pending_admissions" t-as="pa" t-key="pa.id">
+                            <div class="emd-dash-table-row">
+                              <button class="emd-dash-td-link" t-on-click="() => openStudentProfile(pa.id)"><t t-out="pa.name"/></button>
+                              <span><t t-out="pa.class_name"/></span>
+                              <span><t t-out="pa.admission_date"/></span>
+                              <button class="emd-dash-td-btn" t-on-click="() => openStudentProfile(pa.id)">Review</button>
+                            </div>
+                          </t>
+                        </div>
+                      </t>
+                    </div>
+                  </div>
+
+                  <div class="emd-panel">
+                    <div class="emd-panel-header">
+                      <span class="emd-panel-title">Reports &amp; Exports</span>
+                    </div>
+                    <div class="emd-panel-body emd-dash-exports">
+                      <button class="emd-dash-export" t-on-click="() => setNav('reports')" aria-label="Download Attendance Report">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Attendance Report
+                      </button>
+                      <button class="emd-dash-export" t-on-click="() => setNav('reports')" aria-label="Export Fee Summary">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export Fee Summary to Excel
+                      </button>
+                      <button class="emd-dash-export" t-on-click="() => setNav('attendance')" aria-label="Print Attendance Sheet">
+                        <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print Attendance Sheet
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="emd-page-footer">
+                  <span class="emd-footer-text">EduManage v2.0 · Last synced just now</span>
+                </div>
+              </t>
             </div>
           </t>
 
