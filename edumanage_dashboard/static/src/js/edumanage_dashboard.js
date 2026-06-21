@@ -307,6 +307,7 @@ export class EduManageDashboard extends Component {
       classForm: emptyClassForm(),
       classFormErrors: {},
       classFormSaving: false,
+      classDeleting: false,
       newSectionName: '',
       // Fees state
       activeFeesSubTab: "pending",
@@ -378,6 +379,7 @@ export class EduManageDashboard extends Component {
     this.cancelClassForm    = this.cancelClassForm.bind(this);
     this.saveClassForm      = this.saveClassForm.bind(this);
     this.archiveClass       = this.archiveClass.bind(this);
+    this.deleteClass        = this.deleteClass.bind(this);
     this.addSection         = this.addSection.bind(this);
     this.onSectionKeydown   = this.onSectionKeydown.bind(this);
     this.viewStudentsForSection = this.viewStudentsForSection.bind(this);
@@ -1115,6 +1117,32 @@ export class EduManageDashboard extends Component {
     } catch (e) {
       console.error('archiveClass error', e);
     }
+  }
+
+  async deleteClass() {
+    if (!this.state.classForm.id) return;
+    this.closeSettingsMenu();
+    
+    this.dialog.add(ConfirmationDialog, {
+      title: "Delete Class",
+      body: "Are you sure you want to delete this class? This will also delete all associated sections.",
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      confirm: async () => {
+        this.state.classDeleting = true;
+        try {
+          await this.orm.unlink('edumanage.class', [this.state.classForm.id]);
+          this.cancelClassForm();
+          this._loadClassesData();
+        } catch (e) {
+          console.error('deleteClass error', e);
+          this.state.classFormErrors._form = "Failed to delete class. It may be referenced by other records or you may not have permission.";
+        } finally {
+          this.state.classDeleting = false;
+        }
+      },
+      cancel: () => {},
+    });
   }
 
   async _loadClassesData() {
