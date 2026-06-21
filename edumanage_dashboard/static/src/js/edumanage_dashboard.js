@@ -3,6 +3,7 @@ import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { router, routerBus } from "@web/core/browser/router";
+import { View } from "@web/views/view";
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 
@@ -242,6 +243,7 @@ function relativeTime(minutesAgo) {
 
 export class EduManageDashboard extends Component {
   static template = "edumanage_dashboard.Main";
+  static components = { View };
 
   setup() {
     this.orm = useService("orm");
@@ -717,17 +719,14 @@ export class EduManageDashboard extends Component {
   dismissAlert()  { this.state.showAlert = false; }
   setNav(id) {
     if (id === "institution") {
-      if (this.state.institutionId) {
-        this.action.doAction({
-          type: "ir.actions.act_window",
-          res_model: "edumanage.institution",
-          res_id: this.state.institutionId,
-          views: [[false, "form"]],
-          target: "current",
-        });
-      } else {
-        this.action.doAction("edumanage_setup.action_edumanage_institution");
-      }
+      this.state.activeNav = id;
+      this.closeSettingsMenu();
+      router.pushState({
+        activeNav: id,
+        studentsView: undefined,
+        filterClassId: undefined,
+        filterSectionId: undefined,
+      });
       return;
     }
     this.state.activeNav = id;

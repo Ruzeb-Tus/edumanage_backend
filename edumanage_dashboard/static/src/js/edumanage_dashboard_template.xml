@@ -405,6 +405,25 @@
             </div>
           </t>
 
+          <!-- ══ INSTITUTION TAB ════════════════════════════════ -->
+          <t t-elif="state.activeNav === 'institution'">
+            <div class="emd-institution-wrap" style="height: 100%; display: flex; flex-direction: column; min-height: 0;">
+              <t t-if="state.institutionId">
+                 <View type="'form'" resModel="'edumanage.institution'" resId="state.institutionId" display="{ controlPanel: false }" />
+              </t>
+              <t t-else="">
+                <div class="emd-dash-empty-state" style="margin: auto; max-width: 400px; text-align: center; padding: 40px;">
+                  <div class="emd-empty-icon" style="margin: 0 auto 20px;">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg>
+                  </div>
+                  <h3 style="font-family: var(--em-font-heading); font-size: 20px; font-weight: 600; color: var(--em-slate-900); margin-bottom: 8px;">No Institution Configured</h3>
+                  <p class="emd-empty-text" style="margin-bottom: 24px;">Please complete the setup wizard to configure your institution profile.</p>
+                  <button class="emd-empty-cta" t-on-click="() => action.doAction('edumanage_setup.action_edumanage_setup_client')">Start Setup Wizard →</button>
+                </div>
+              </t>
+            </div>
+          </t>
+
           <!-- ══ STUDENTS TAB ═════════════════════════════════ -->
           <t t-elif="state.activeNav === 'students'">
 
